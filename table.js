@@ -650,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = e.target.closest('tr');
             if (row) {
                 const index = row.dataset.index;
-                window.location.href = `./tableh.php?dayIndex=${index}`;
+                window.location.href = `./tableh.html?dayIndex=${index}`;
             }
         });
     }
@@ -703,4 +703,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Avvia il caricamento iniziale dei dati
     initData();
+
 });
