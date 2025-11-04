@@ -1,5 +1,5 @@
 // Nome della cache — aggiorna questo numero ogni volta che pubblichi
-const CACHE_NAME = 'meteonb-v1.0.5';
+const CACHE_NAME = 'meteonb-v1.0.6';
 
 // File da cache-are (aggiungi qui tutti i tuoi file statici)
 const ASSETS_TO_CACHE = [
@@ -63,6 +63,7 @@ self.addEventListener('fetch', event => {
     }).catch(() => caches.match('/index.html')) // fallback offline
   );
 });
+
 
 
 
