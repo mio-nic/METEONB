@@ -1,7 +1,7 @@
 //*service
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/METEONB/service-worker.php')
+    navigator.serviceWorker.register('/METEONB/service-worker.js')
       .then(reg => {
         console.log('Service Worker registrato con successo:', reg.scope);
       })
@@ -9,4 +9,5 @@ if ('serviceWorker' in navigator) {
         console.log('Registrazione del Service Worker fallita:', err);
       });
   });
+
 }
