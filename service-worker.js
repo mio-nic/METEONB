@@ -1,4 +1,4 @@
-const APP_VERSION = '1.0.0'; // Aggiorna qui per testare nuove versioni
+const APP_VERSION = '1.0.1'; // Aggiorna qui per testare nuove versioni
 
 // Installazione: solo log, nessuna cache
 self.addEventListener('install', event => {
@@ -23,3 +23,4 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   event.respondWith(fetch(event.request));
 });
+
