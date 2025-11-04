@@ -124,20 +124,35 @@
 <script type="module" src="./bar.js"></script>
 </body>
   <script>
+const APP_VERSION = '1.0.4'; // Aggiorna questa versione quando cambi il SW
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
+    // Registra il service worker
     navigator.serviceWorker.register('./service-worker.js')
       .then(reg => {
-        console.log('✅ Service Worker registrato:', reg.scope);
+        console.log(`✅ Service Worker registrato: ${reg.scope} — Versione app: ${APP_VERSION}`);
         
-        
+        // Controlla aggiornamenti periodici (opzionale)
+        setInterval(() => {
+          reg.update();
+        }, 60 * 1000);
       })
       .catch(err => console.error('❌ Errore SW:', err));
+
+    // Ricezione messaggi dal service worker
+    navigator.serviceWorker.addEventListener('message', event => {
+      if (event.data && event.data.type === 'VERSION') {
+        console.log(`ℹ️ Service Worker versione attiva: ${event.data.version}`);
+      }
+    });
   });
 }
 </script>
 
+
 </html>
+
 
 
 
