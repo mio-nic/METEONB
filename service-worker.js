@@ -1,8 +1,11 @@
-// ⚡ Versione app
-const APP_VERSION = '1.0.9'; // Aggiorna questa versione ad ogni rilascio
+// -----------------------------
+// service-worker.js definitivo
+// -----------------------------
+
+const APP_VERSION = '1.0.4'; // Aggiorna questa versione ad ogni rilascio
 const CACHE_NAME = `meteonb-${APP_VERSION}`;
 
-// 📂 File da mettere in cache
+// File da mettere in cache
 const ASSETS_TO_CACHE = [
   './index.html',
   './style.css',
@@ -17,7 +20,7 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
 ];
 
-// 🔹 Installazione: cache iniziale
+// Installazione: cache iniziale
 self.addEventListener('install', event => {
   console.log('[SW] Installazione versione:', APP_VERSION);
   event.waitUntil(
@@ -27,34 +30,42 @@ self.addEventListener('install', event => {
   );
 });
 
-// 🔹 Attivazione: elimina cache vecchie
+// Attivazione: elimina cache vecchie e invia versione al client
 self.addEventListener('activate', event => {
   console.log('[SW] Attivazione versione:', APP_VERSION);
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
+    (async () => {
+      // Cancella cache vecchie
+      const keys = await caches.keys();
+      await Promise.all(
         keys.map(key => {
           if (key !== CACHE_NAME) {
             console.log('[SW] Eliminata cache vecchia:', key);
             return caches.delete(key);
           }
         })
-      )
-    ).then(() => self.clients.claim()) // prende il controllo immediato
+      );
+
+      // Notifica tutti i client della versione attiva
+      const clientsList = await self.clients.matchAll();
+      clientsList.forEach(client => {
+        client.postMessage({ type: 'VERSION', version: APP_VERSION });
+      });
+
+      await self.clients.claim(); // prende il controllo immediato delle schede
+    })()
   );
 });
 
-// 🔹 Gestione fetch: serve dalla cache, fallback alla rete
+// Gestione fetch: serve dalla cache, fallback rete
 self.addEventListener('fetch', event => {
-  // Ignora chiamate dinamiche tipo API
+  // Ignora richieste API dinamiche
   if (event.request.url.includes('/api/')) return;
 
   event.respondWith(
     caches.match(event.request).then(response => {
-      // Se presente in cache, restituisce subito
       if (response) return response;
 
-      // Altrimenti fetch e aggiorna cache
       return fetch(event.request).then(networkResponse => {
         if (!networkResponse || networkResponse.status !== 200) return networkResponse;
         const clonedResponse = networkResponse.clone();
@@ -66,5 +77,3 @@ self.addEventListener('fetch', event => {
     }).catch(() => caches.match('./index.html')) // fallback offline
   );
 });
-
-
