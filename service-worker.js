@@ -2,7 +2,7 @@
 // service-worker.js definitivo
 // -----------------------------
 
-const APP_VERSION = '1.0.9'; // Aggiorna questa versione ad ogni rilascio
+const APP_VERSION = '1.1.0'; // Aggiorna questa versione ad ogni rilascio
 const CACHE_NAME = `meteonb-${APP_VERSION}`;
 
 // File da mettere in cache
@@ -77,4 +77,5 @@ self.addEventListener('fetch', event => {
     }).catch(() => caches.match('./index.html')) // fallback offline
   );
 });
+
 
