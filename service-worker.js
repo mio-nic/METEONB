@@ -1,5 +1,5 @@
 // service-worker.js
-const APP_VERSION = '1.1.2'; // Aggiorna qui la versione
+const APP_VERSION = '1.1.3'; // Aggiorna qui la versione
 const CACHE_NAME = `meteonb-${APP_VERSION}`;
 
 // File da mettere in cache
@@ -91,4 +91,5 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
 
