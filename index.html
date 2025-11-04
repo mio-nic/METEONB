@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Meteo Dashboard</title>
+
+  <!-- Manifest & Icone -->
+  <link rel="manifest" href="/METEONB/manifest.json">
+  <link rel="icon" type="image/x-icon" href="/METEONB/favicon.ico">
+
+  <!-- Versione statica -->
+  <link rel="stylesheet" href="./style.css?v=1.0.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <style>
+    body { margin-top: 100px; } /* Aggiusta il margine se hai un header fisso */
+  </style>
+</head>
+
+<body class="page-with-fixed-header">
+  <nav id="sidebarMenu" class="sidebar">
+    <div class="sidebar-header">
+      <h3>Menu</h3>
+      <button id="closeSidebar" class="close-btn">&times;</button>
+    </div>
+    <a href="/METEONB/index.html" class="nav-link active"><i class="fas fa-home"></i> Home</a>
+    <a href="/METEONB/notizie/notizie.html" class="nav-link"><i class="fas fa-database"></i> Notizie</a>
+    <a href="/METEONB/pre/pre.html" class="nav-link"><i class="fas fa-satellite-dish"></i> Stazione</a>
+
+    <div class="sidebar-divider"></div>
+    <span class="sidebar-footer">Versione: <span id="appVersion">1.0.0</span></span>
+  </nav>
+
+  <div class="overlay" id="sidebarOverlay"></div>
+
+  <div class="scrolling-bar">
+    <span class="scrolling-text"></span>
+  </div>
+
+  <header class="status-header">
+    <div class="header-content-top">
+      <button id="openSidebar" class="menu-button">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div id="searchBarContainer" class="search-bar-container search-container">
+        <span id="locationDisplay" class="location-display">
+          <i id="searchIcon" class="fas fa-search"></i> <span id="locationName"></span>
+          <span id="lastUpdate">Caricamento dati...</span>
+        </span>
+
+        <input type="text" id="cityInput" placeholder="Cerca città (es. Padova, Italia)..." class="main-search-input hidden">
+        <button id="closeSearchButton" class="close-search-button hidden">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="menu-button-placeholder"></div>
+    </div>
+    <div class="subtitle-divider"></div>
+  </header>
+
+  <div class="container">
+    <div class="weather-card-container"></div>
+    <div class="table-container">
+      <table id="weatherTable" aria-describedby="statusMessage">
+        <thead><tr><th></th><th></th><th></th><th></th><th></th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h3>TEMPERATURA</h3>
+    <div class="chart-container">
+      <div id="container" style="height: 278px;"></div>
+    </div>
+
+    <h3>PRECIPITAZIONI</h3>
+    <div class="chart-container">
+      <canvas id="dailyRainChart"></canvas>
+    </div>
+
+    <div id="comfortTableContainer">
+      <p>Caricamento dati in corso...</p>
+    </div>
+
+    <h3>ORA PIÙ SOLEGGIATA</h3>
+    <div class="container-sun-info">
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <tbody id="sunTableBody"></tbody>
+      </table>
+      <p id="offsetMessage"></p>
+      <div style="height:12px"></div>
+      <h3>ATTIVITÀ E SPORT</h3>
+      <div class="container" id="app"></div>
+    </div>
+
+    <div style="height:12px"></div>
+  </div>
+
+  <!-- Librerie -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script> 
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+  <script src="https://code.highcharts.com/highcharts-more.js"></script>     
+
+  <!-- Versione script -->
+  <script>
+    const APP_VERSION = '1.0.0';
+    document.getElementById('appVersion').textContent = APP_VERSION;
+  </script>
+
+  <!-- Script locali -->
+  <script src="/METEONB/service.js?v=1.0.0"></script>
+  <script type="module" src="./main.js?v=1.0.0"></script>
+  <script type="module" src="./gradi.js?v=1.0.0"></script>
+  <script type="module" src="./table.js?v=1.0.0"></script>
+  <script type="module" src="./gradi-precipitazioni.js?v=1.0.0"></script>
+  <script type="module" src="./vita.js?v=1.0.0"></script>
+  <script type="module" src="./sun.js?v=1.0.0"></script>
+  <script type="module" src="./sport.js?v=1.0.0"></script>
+  <script type="module" src="./bar.js?v=1.0.0"></script>
+</body>
+</html>
