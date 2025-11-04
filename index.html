@@ -128,25 +128,23 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
       .then(reg => {
-        console.log(`✅ Service Worker registrato: ${reg.scope}`);
+        console.log(`✅ SW registrato: ${reg.scope}`);
 
-        // Controlla aggiornamenti periodici
+        // Controlla aggiornamenti ogni minuto
         setInterval(() => reg.update(), 60 * 1000);
       })
       .catch(err => console.error('❌ Errore SW:', err));
 
-    // Messaggi dal SW
     navigator.serviceWorker.addEventListener('message', event => {
       if (!event.data) return;
 
-      if (event.data.type === 'VERSION') {
-        console.log(`ℹ️ Service Worker versione attiva: ${event.data.version}`);
+      // Mostra versione
+      if (event.data.type === 'NEW_VERSION') {
+        console.log(`🔄 Nuova versione disponibile: ${event.data.version}`);
         const versionEl = document.getElementById('appVersion');
         if (versionEl) versionEl.textContent = event.data.version;
-      }
 
-      if (event.data.type === 'RELOAD') {
-        console.log('🔄 Nuovo contenuto rilevato, ricarico pagina...');
+        // Forza reload immediato
         window.location.reload();
       }
     });
@@ -157,7 +155,9 @@ if ('serviceWorker' in navigator) {
 
 
 
+
 </html>
+
 
 
 
