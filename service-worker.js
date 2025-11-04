@@ -1,8 +1,5 @@
-// service-worker.js
-const APP_VERSION = '1.1.3'; // Aggiorna qui la versione
+const APP_VERSION = '1.1.4';
 const CACHE_NAME = `meteonb-${APP_VERSION}`;
-
-// File da mettere in cache
 const ASSETS_TO_CACHE = [
   './index.html',
   './style.css',
@@ -15,18 +12,19 @@ const ASSETS_TO_CACHE = [
   './sport.js',
   './bar.js',
   './manifest.json',
-  ];
+];
 
-// Installazione: cache iniziale
+// Installazione
 self.addEventListener('install', event => {
   console.log('[SW] Installazione versione:', APP_VERSION);
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS_TO_CACHE))
+      .then(() => self.skipWaiting()) // forza attivazione immediata
   );
 });
 
-// Attivazione: elimina cache vecchie e invia messaggi ai client
+// Attivazione
 self.addEventListener('activate', event => {
   console.log('[SW] Attivazione versione:', APP_VERSION);
   event.waitUntil(
@@ -38,58 +36,36 @@ self.addEventListener('activate', event => {
         })
       );
 
-      // Notifica client della versione attiva
+      // Prendi controllo immediato delle schede aperte
+      await self.clients.claim();
+
+      // Notifica tutti i client che c'è una nuova versione
       const clientsList = await self.clients.matchAll({ includeUncontrolled: true });
       clientsList.forEach(client => {
-        client.postMessage({ type: 'VERSION', version: APP_VERSION });
+        client.postMessage({ type: 'NEW_VERSION', version: APP_VERSION });
       });
-
-      await self.clients.claim();
     })()
   );
 });
 
-// Fetch: serve dalla cache, aggiorna solo file modificati
+// Fetch: serve cache, aggiorna cache in background
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.open(CACHE_NAME).then(async cache => {
-      const cachedResponse = await cache.match(event.request);
+    caches.match(event.request).then(cachedResponse => {
       if (cachedResponse) {
-        // Controlla aggiornamenti in background
         fetch(event.request).then(networkResponse => {
           if (networkResponse && networkResponse.status === 200) {
-            cache.match(event.request).then(oldResponse => {
-              networkResponse.clone().text().then(newText => {
-                if (!oldResponse) {
-                  cache.put(event.request, networkResponse.clone());
-                  return;
-                }
-                oldResponse.text().then(oldText => {
-                  if (oldText !== newText) {
-                    console.log(`[SW] Aggiornamento file: ${event.request.url}`);
-                    cache.put(event.request, networkResponse.clone());
-                    // Notifica client che c'è un file aggiornato
-                    self.clients.matchAll().then(clients => {
-                      clients.forEach(client => client.postMessage({ type: 'RELOAD' }));
-                    });
-                  }
-                });
-              });
-            });
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
           }
         }).catch(() => {});
         return cachedResponse;
-      } else {
-        // Se non è in cache, fetch dalla rete
-        return fetch(event.request).then(networkResponse => {
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(event.request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => caches.match('./index.html'));
       }
+      return fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200) {
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
+        }
+        return networkResponse;
+      }).catch(() => caches.match('./index.html'));
     })
   );
 });
-
-
