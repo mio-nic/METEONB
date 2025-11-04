@@ -129,8 +129,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js')
       .then(reg => {
         console.log(`✅ SW registrato: ${reg.scope}`);
-
-        // Controlla aggiornamenti ogni minuto
         setInterval(() => reg.update(), 60 * 1000);
       })
       .catch(err => console.error('❌ Errore SW:', err));
@@ -138,13 +136,16 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', event => {
       if (!event.data) return;
 
-      // Mostra versione
       if (event.data.type === 'NEW_VERSION') {
         console.log(`🔄 Nuova versione disponibile: ${event.data.version}`);
         const versionEl = document.getElementById('appVersion');
         if (versionEl) versionEl.textContent = event.data.version;
 
-        // Forza reload immediato
+        window.location.reload();
+      }
+
+      if (event.data.type === 'RELOAD') {
+        console.log('🔄 Aggiornamento file rilevato, ricarico pagina...');
         window.location.reload();
       }
     });
@@ -156,7 +157,9 @@ if ('serviceWorker' in navigator) {
 
 
 
+
 </html>
+
 
 
 
