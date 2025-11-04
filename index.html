@@ -127,21 +127,21 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
-      .then(reg => {
-        console.log('✅ SW registrato:', reg.scope);
-      })
+      .then(reg => console.log('✅ SW registrato:', reg.scope))
       .catch(err => console.error('❌ Errore SW:', err));
 
     navigator.serviceWorker.addEventListener('message', event => {
       if (event.data?.type === 'NEW_VERSION') {
-        console.log('🔄 Nuova versione disponibile:', event.data.version);
-        window.location.reload(); // reload automatico per test
+        console.log('🔄 Nuova versione PWA disponibile:', event.data.version);
+        // Se vuoi, ricarica la pagina automaticamente:
+        // window.location.reload();
       }
     });
   });
 }
 </script>
 </html>
+
 
 
 
