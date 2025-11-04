@@ -1,4 +1,4 @@
-const APP_VERSION = '1.0.13'; // Cambia qui per testare aggiornamenti
+const APP_VERSION = '1.0.14'; // Cambia qui per testare aggiornamenti
 const CACHE_NAME = `meteonb-${APP_VERSION}`;
 const ASSETS_TO_CACHE = [
   './index.html',
@@ -58,3 +58,4 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
