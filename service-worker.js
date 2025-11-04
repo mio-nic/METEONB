@@ -1,70 +1,69 @@
-// 🧩 Nome della cache — cambia numero a ogni rilascio per forzare update
-const CACHE_NAME = 'meteonb-v3';  
+// Nome della cache — aggiorna questo numero ogni volta che pubblichi
+const CACHE_NAME = 'meteonb-v1.0.3';
 
-// 🗂️ File da mettere in cache (aggiungi i tuoi file qui)
+// File da cache-are (aggiungi qui tutti i tuoi file statici)
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/style.css',
-  '/main.js',
-  '/vita.js',
+  '/style.css?v=1.0.0',
+  '/main.js?v=1.0.0',
+  '/gradi.js?v=1.0.0',
+  '/table.js?v=1.0.0',
+  '/gradi-precipitazioni.js?v=1.0.0',
+  '/vita.js?v=1.0.3',
+  '/sun.js?v=1.0.0',
+  '/sport.js?v=1.0.0',
+  '/bar.js?v=1.0.0',
+  '/METEONB/service.js?v=1.0.0',
   '/manifest.json',
   '/favicon.ico',
-  // Aggiungi altre cartelle o file
+  // Se hai cartelle aggiuntive come notizie o pre, aggiungile qui:
   '/notizie/notizie.html',
   '/pre/pre.html'
 ];
 
-// 🪣 Installazione: salva in cache i file essenziali
+// Installazione: cache iniziale
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Installando nuova versione...');
+  console.log('[SW] Installazione...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(ASSETS_TO_CACHE))
-      .then(() => self.skipWaiting()) // forza l’attivazione subito
+      .then(() => self.skipWaiting()) // attiva subito il nuovo SW
   );
 });
 
-// 🧹 Attivazione: elimina le cache vecchie
+// Attivazione: elimina cache vecchie
 self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Attivato. Pulizia cache vecchie...');
+  console.log('[SW] Attivazione e pulizia cache vecchie...');
   event.waitUntil(
-    caches.keys().then(keys => 
+    caches.keys().then(keys =>
       Promise.all(
         keys.map(key => {
           if (key !== CACHE_NAME) {
-            console.log('[ServiceWorker] Eliminata cache vecchia:', key);
+            console.log('[SW] Eliminata cache:', key);
             return caches.delete(key);
           }
         })
       )
-    ).then(() => self.clients.claim()) // forza l’uso immediato del nuovo SW
+    ).then(() => self.clients.claim())
   );
 });
 
-// ⚡ Gestione delle richieste di rete
+// Intercetta richieste di rete
 self.addEventListener('fetch', event => {
-  // Evita di cacheare chiamate dinamiche tipo API
+  // Ignora chiamate dinamiche (API)
   if (event.request.url.includes('/api/')) return;
 
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Se il file è già in cache, lo usa
-        if (response) return response;
-
-        // Altrimenti lo scarica dalla rete e lo aggiunge alla cache
-        return fetch(event.request).then(networkResponse => {
-          if (!networkResponse || networkResponse.status !== 200) {
-            return networkResponse;
-          }
-          const clonedResponse = networkResponse.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, clonedResponse);
-          });
-          return networkResponse;
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request).then(networkResponse => {
+        if (!networkResponse || networkResponse.status !== 200) return networkResponse;
+        const clonedResponse = networkResponse.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, clonedResponse);
         });
-      })
-      .catch(() => caches.match('/index.html')) // fallback offline
+        return networkResponse;
+      });
+    }).catch(() => caches.match('/index.html')) // fallback offline
   );
 });
