@@ -15,10 +15,7 @@ const ASSETS_TO_CACHE = [
   './sport.js',
   './bar.js',
   './manifest.json',
-  './favicon.ico',
-  './notizie/notizie.html',
-  './pre/pre.html'
-];
+  ];
 
 // Installazione: cache iniziale
 self.addEventListener('install', event => {
@@ -94,3 +91,4 @@ self.addEventListener('fetch', event => {
     })
   );
 });
+
