@@ -126,25 +126,28 @@
   <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Registra il service worker
     navigator.serviceWorker.register('./service-worker.js')
       .then(reg => {
         console.log(`✅ Service Worker registrato: ${reg.scope}`);
-        
-        // Controlla aggiornamenti periodici (opzionale)
+
+        // Controlla aggiornamenti periodici
         setInterval(() => reg.update(), 60 * 1000);
       })
       .catch(err => console.error('❌ Errore SW:', err));
 
-    // Ricezione messaggi dal SW
+    // Messaggi dal SW
     navigator.serviceWorker.addEventListener('message', event => {
-      if (event.data && event.data.type === 'VERSION') {
-        const appVersion = event.data.version;
-        console.log(`ℹ️ Service Worker versione attiva: ${appVersion}`);
+      if (!event.data) return;
 
-        // Aggiorna la UI con la versione
+      if (event.data.type === 'VERSION') {
+        console.log(`ℹ️ Service Worker versione attiva: ${event.data.version}`);
         const versionEl = document.getElementById('appVersion');
-        if (versionEl) versionEl.textContent = appVersion;
+        if (versionEl) versionEl.textContent = event.data.version;
+      }
+
+      if (event.data.type === 'RELOAD') {
+        console.log('🔄 Nuovo contenuto rilevato, ricarico pagina...');
+        window.location.reload();
       }
     });
   });
@@ -153,7 +156,9 @@ if ('serviceWorker' in navigator) {
 
 
 
+
 </html>
+
 
 
 
