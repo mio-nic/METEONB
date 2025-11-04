@@ -1,7 +1,3 @@
-<?php
-// Includi il file della versione all'inizio
-require_once 'version.php'; 
-?>
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -81,9 +77,10 @@ require_once 'version.php';
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     
-    <script src="/METEONB/service.js?v=<?php echo $GLOBAL_VERSION; ?>"></script>
-    <script type="module" src="./main.js?v=<?php echo $GLOBAL_VERSION; ?>"></script>
-    <script type="module" src="./tableh.js?v=<?php echo $GLOBAL_VERSION; ?>"></script> 
+    <script src="/METEONB/service.js"></script>
+    <script type="module" src="./main.js"></script>
+    <script type="module" src="./tableh.js"></script> 
     
     </body>
+
 </html>
