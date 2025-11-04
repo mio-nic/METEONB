@@ -1,7 +1,8 @@
-// Nome della cache — aggiorna questo numero ogni volta che pubblichi
-const CACHE_NAME = 'meteonb-v1.0.6';
+// ⚡ Versione app
+const APP_VERSION = '1.0.7'; // Aggiorna questa versione ad ogni rilascio
+const CACHE_NAME = `meteonb-${APP_VERSION}`;
 
-// File da cache-are (aggiungi qui tutti i tuoi file statici)
+// 📂 File da mettere in cache
 const ASSETS_TO_CACHE = [
   './index.html',
   './style.css',
@@ -14,45 +15,47 @@ const ASSETS_TO_CACHE = [
   './sport.js',
   './bar.js',
   './manifest.json',
-   ];
+];
 
-
-
-// Installazione: cache iniziale
+// 🔹 Installazione: cache iniziale
 self.addEventListener('install', event => {
-  console.log('[SW] Installazione...');
+  console.log('[SW] Installazione versione:', APP_VERSION);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(ASSETS_TO_CACHE))
-      .then(() => self.skipWaiting()) // attiva subito il nuovo SW
+      .then(() => self.skipWaiting()) // forza attivazione immediata
   );
 });
 
-// Attivazione: elimina cache vecchie
+// 🔹 Attivazione: elimina cache vecchie
 self.addEventListener('activate', event => {
-  console.log('[SW] Attivazione e pulizia cache vecchie...');
+  console.log('[SW] Attivazione versione:', APP_VERSION);
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
         keys.map(key => {
           if (key !== CACHE_NAME) {
-            console.log('[SW] Eliminata cache:', key);
+            console.log('[SW] Eliminata cache vecchia:', key);
             return caches.delete(key);
           }
         })
       )
-    ).then(() => self.clients.claim())
+    ).then(() => self.clients.claim()) // prende il controllo immediato
   );
 });
 
-// Intercetta richieste di rete
+// 🔹 Gestione fetch: serve dalla cache, fallback alla rete
 self.addEventListener('fetch', event => {
-  // Ignora chiamate dinamiche (API)
+  // Ignora chiamate dinamiche tipo API
   if (event.request.url.includes('/api/')) return;
 
   event.respondWith(
     caches.match(event.request).then(response => {
-      return response || fetch(event.request).then(networkResponse => {
+      // Se presente in cache, restituisce subito
+      if (response) return response;
+
+      // Altrimenti fetch e aggiorna cache
+      return fetch(event.request).then(networkResponse => {
         if (!networkResponse || networkResponse.status !== 200) return networkResponse;
         const clonedResponse = networkResponse.clone();
         caches.open(CACHE_NAME).then(cache => {
@@ -60,12 +63,6 @@ self.addEventListener('fetch', event => {
         });
         return networkResponse;
       });
-    }).catch(() => caches.match('/index.html')) // fallback offline
+    }).catch(() => caches.match('./index.html')) // fallback offline
   );
 });
-
-
-
-
-
-
