@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Eventi (rimangono invariati) ---
     backButton.addEventListener('click', () => {
-        window.location.href = './index.php'; 
+        window.location.href = './index.html'; 
     });
 
     prevDayButton.addEventListener('click', () => { 
@@ -213,4 +213,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initData();
+
 });
