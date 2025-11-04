@@ -3,24 +3,23 @@ const CACHE_NAME = 'meteonb-v1.0.3';
 
 // File da cache-are (aggiungi qui tutti i tuoi file statici)
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/style.css?v=1.0.0',
-  '/main.js?v=1.0.0',
-  '/gradi.js?v=1.0.0',
-  '/table.js?v=1.0.0',
-  '/gradi-precipitazioni.js?v=1.0.0',
-  '/vita.js?v=1.0.3',
-  '/sun.js?v=1.0.0',
-  '/sport.js?v=1.0.0',
-  '/bar.js?v=1.0.0',
-  '/METEONB/service.js?v=1.0.0',
-  '/manifest.json',
-  '/favicon.ico',
-  // Se hai cartelle aggiuntive come notizie o pre, aggiungile qui:
-  '/notizie/notizie.html',
-  '/pre/pre.html'
+  './index.html',
+  './style.css',
+  './main.js',
+  './gradi.js',
+  './table.js',
+  './gradi-precipitazioni.js',
+  './vita.js',
+  './sun.js',
+  './sport.js',
+  './bar.js',
+  './manifest.json',
+  './favicon.ico',
+  './notizie/notizie.html',
+  './pre/pre.html'
 ];
+
+
 
 // Installazione: cache iniziale
 self.addEventListener('install', event => {
@@ -67,3 +66,4 @@ self.addEventListener('fetch', event => {
     }).catch(() => caches.match('/index.html')) // fallback offline
   );
 });
+
