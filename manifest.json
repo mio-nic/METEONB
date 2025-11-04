@@ -1,0 +1,24 @@
+{
+  "name": "METEONB",
+  "short_name": "NB",
+  "description": "Previsioni meteo in tempo reale e radar per la tua zona.", 
+  "start_url": "/METEONB/start.html",
+  "display": "standalone",
+  "lang": "it", 
+  "background_color": "#000000",
+  "theme_color": "#007bff",
+  "navigation_bar_color": "#000000",
+  "orientation": "portrait",
+ "icons": [
+    {
+      "src": "https://meteofree.altervista.org/METEONB/192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://meteofree.altervista.org/METEONB/512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

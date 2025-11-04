@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0e">
+  <title>MeteoFree - Benvenuto</title>
+  <link rel="manifest" href="/METEONB/manifest.json">
+  <link rel="icon" type="image/x-icon" href="/METEONB/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Palette del miglior tema scuro */
+      --primary-color: #00e0ff;
+      --secondary-color: #bd17ff;
+      --background-dark: #0a0a0e;
+      --container-bg: rgba(22, 22, 26, 0.6);
+      --text-color: #ecf0f1;
+      --secondary-text-color: #a0a0a0;
+      --button-bg: linear-gradient(90deg, #00e0ff, #bd17ff);
+      --button-hover: linear-gradient(90deg, #bd17ff, #00e0ff);
+      --glow-color: #00e0ff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--background-dark);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Main container */
+    .container {
+      background-color: var(--container-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 3rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      max-width: 90%;
+      width: 400px;
+      text-align: center;
+      animation: fadeIn 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      position: relative;
+      z-index: 1;
+      overflow: hidden; 
+      cursor: none;
+    }
+    
+    /* Elegant background animation inside the container */
+    .container::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      top: -50%;
+      left: -50%;
+      background: 
+        radial-gradient(circle, var(--primary-color), transparent 50%),
+        radial-gradient(circle, var(--secondary-color), transparent 50%),
+        linear-gradient(45deg, #00e0ff, #bd17ff, #0a0a0e, #0a0a0e);
+      background-size: 80% 80%, 80% 80%, 200% 200%;
+      background-position: 0% 0%, 100% 100%, 0% 0%;
+      animation: moveGlow 15s ease-in-out infinite, gradientMove 20s linear infinite;
+      filter: blur(80px);
+      opacity: 0.3;
+      z-index: -1;
+    }
+
+    /* Style for light points */
+    .light-point {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      box-shadow: 0 0 5px 2px var(--primary-color), 0 0 10px 5px var(--secondary-color);
+      animation: fadeOutAndShrink 2s forwards;
+    }
+
+    @keyframes fadeOutAndShrink {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5);
+      }
+    }
+
+    @keyframes moveGlow {
+      0% { background-position: 0% 50%, 100% 50%, 0% 0%; }
+      50% { background-position: 100% 50%, 0% 50%, 100% 100%; }
+      100% { background-position: 0% 50%, 100% 50%, 0% 0%; }
+    }
+    
+    @keyframes gradientMove {
+      0% { background-position-x: 0%; }
+      100% { background-position-x: 200%; }
+    }
+
+
+    .title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      animation: fadeInUp 1s ease-out forwards;
+      opacity: 0;
+      color: var(--primary-color);
+      text-shadow: 0 0 2px var(--primary-color), 0 0 20px var(--primary-color);
+    }
+
+    .description {
+      color: var(--secondary-text-color);
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      animation: fadeInUp 1s ease-out 0.5s forwards;
+      opacity: 0;
+    }
+    
+    .instruction {
+        color: var(--secondary-text-color);
+        font-size: 0.9rem;
+        margin-top: 1.5rem;
+        opacity: 0;
+        animation: fadeInUp 1s ease-out 1.5s forwards;
+    }
+
+    .button {
+      display: inline-block;
+      background: var(--button-bg);
+      color: #ffffff;
+      font-weight: 600;
+      padding: 0.8rem 2.5rem;
+      border-radius: 9999px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      animation: fadeInUp 1s ease-out 1s forwards, pulse 1.5s infinite;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      border: none;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background: var(--button-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.1);
+      transform: rotate(45deg);
+      transition: all 0.5s;
+    }
+    
+    .button:hover::before {
+      top: 0;
+      left: 0;
+    }
+
+    .countdown {
+        font-size: 1.75rem; /* Increased font size */
+        font-weight: 800; /* Bolder font weight */
+        color: #ffffff;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5); /* Added glow effect */
+        margin-top: 2rem;
+        z-index: 2;
+        position: relative;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+    }
+    
+    .countdown.visible {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 224, 255, 0.5); }
+      50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 224, 255, 0.8), 0 0 30px rgba(189, 23, 255, 0.5); }
+      100% { transform: scale(1); box-shadow: 0 0 10px rgba(0, 224, 255, 0.5); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="container">
+    <h1 class="title">Benvenuti in App MeteoNB</h1>
+    <p class="description">
+      Il tuo punto di riferimento per previsioni meteo precise e in tempo reale.
+    </p>
+    <p class="description">
+      🟢Disponibile dal 03/12/2025
+    </p>
+    <button class="button" id="startButton">
+      Iniziamo
+    </button>
+    <p class="instruction">Tocca o sposta il mouse per scoprire l'animazione!</p>
+    <div id="countdown" class="countdown"></div>
+  </div>
+
+  <script>
+    const container = document.querySelector('.container');
+    const startButton = document.getElementById('startButton');
+    const countdownElement = document.getElementById('countdown');
+    const redirectUrl = 'https://meteofree.altervista.org/METEONB/index.php';
+
+    let countdownInterval;
+    let countdownTimeout;
+    let countdownActive = false;
+    let countdownFinished = localStorage.getItem('countdownFinished') === 'true';
+
+    // Function for the light points animation
+    function createLightPoint(x, y) {
+      const lightPoint = document.createElement('div');
+      lightPoint.className = 'light-point';
+      lightPoint.style.left = `${x}px`;
+      lightPoint.style.top = `${y}px`;
+      container.appendChild(lightPoint);
+      setTimeout(() => {
+        lightPoint.remove();
+      }, 2000);
+    }
+
+    // Handle mousemove event
+    container.addEventListener('mousemove', (e) => {
+      const containerRect = container.getBoundingClientRect();
+      const x = e.clientX - containerRect.left;
+      const y = e.clientY - containerRect.top;
+      createLightPoint(x, y);
+    });
+
+    // Handle touchmove event for mobile devices
+    container.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const containerRect = container.getBoundingClientRect();
+        const x = touch.clientX - containerRect.left;
+        const y = touch.clientY - containerRect.top;
+        createLightPoint(x, y);
+      }
+    });
+
+    // Function to handle the countdown end state
+    function handleCountdownEnd() {
+      clearInterval(countdownInterval);
+      countdownElement.innerHTML = "È ora di iniziare! 🎉";
+      startButton.innerText = "Continua";
+      startButton.disabled = false;
+      countdownActive = false;
+      localStorage.setItem('countdownFinished', 'true');
+    }
+
+    // Check if the countdown has already finished on page load
+    if (countdownFinished) {
+      countdownElement.classList.add('visible');
+      handleCountdownEnd();
+    }
+
+    // Handle button click
+    startButton.addEventListener('click', () => {
+      if (startButton.innerText === "Continua") {
+        window.location.href = redirectUrl;
+        return;
+      }
+      
+      // Clear any previous countdowns to prevent overlaps
+      clearInterval(countdownInterval);
+      clearTimeout(countdownTimeout);
+
+      // Show the countdown
+      countdownElement.classList.add('visible');
+      countdownActive = true;
+      startButton.disabled = true;
+
+      // Set the countdown date back to the original date
+      const countdownDate = new Date('December 3, 2025 09:00:00');
+      const countdownTime = countdownDate.getTime();
+
+      // Function that updates the countdown every second
+      countdownInterval = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = countdownTime - now;
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        countdownElement.innerHTML = `Mancano ${days} giorni, ${hours} ore, ${minutes} minuti e ${seconds} secondi!`;
+
+        if (distance < 0) {
+          handleCountdownEnd();
+        }
+      }, 1000);
+      
+      // Hide the countdown after 30 seconds
+      countdownTimeout = setTimeout(() => {
+        if (countdownActive) {
+          clearInterval(countdownInterval);
+          countdownElement.classList.remove('visible');
+          startButton.disabled = false;
+          countdownActive = false;
+        }
+      }, 30000);
+    });
+  </script>
+
+</body>
+</html>
