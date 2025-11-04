@@ -125,22 +125,32 @@
 </body>
   <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(reg => console.log('✅ SW registrato:', reg.scope))
-      .catch(err => console.error('❌ Errore SW:', err));
+  navigator.serviceWorker.register('./service-worker.js')
+    .then(reg => console.log('✅ SW registrato', reg.scope))
+    .catch(err => console.error('❌ Errore SW:', err));
 
-    navigator.serviceWorker.addEventListener('message', event => {
-      if (event.data?.type === 'NEW_VERSION') {
-        console.log('🔄 Nuova versione PWA disponibile:', event.data.version);
-        // Se vuoi, ricarica la pagina automaticamente:
-        // window.location.reload();
+  navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data?.type === 'FILE_UPDATED') {
+      console.log('⚡ File aggiornato:', event.data.url);
+
+      // Mostra messaggio all’utente
+      if (!document.getElementById('update-notice')) {
+        const notice = document.createElement('div');
+        notice.id = 'update-notice';
+        notice.style = 'position:fixed;bottom:10px;left:10px;padding:10px;background:#f90;color:#000;z-index:9999;';
+        notice.innerHTML = 'Nuovo aggiornamento disponibile <button id="reload-btn">Aggiorna</button>';
+        document.body.appendChild(notice);
+
+        document.getElementById('reload-btn').addEventListener('click', () => {
+          window.location.reload();
+        });
       }
-    });
+    }
   });
 }
 </script>
 </html>
+
 
 
 
