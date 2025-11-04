@@ -21,7 +21,7 @@ const THRESHOLDS = {
     },
     // Freddo (Temp Min)
     'COLD': {
-        RED: -5, ORANGE: 0, YELLOW: 4,
+        RED: -5, ORANGE: 0, YELLOW: 10,
         title: 'Freddo', unit: '°C',
         desc: {
             4: 'Freddo Estremo. RISCHIO GELO, DANNI STRUTTURALI e ipotermia grave.',
@@ -658,5 +658,6 @@ export const updateComfortTable = async (data = null) => {
 export function getComfortChartInstance() {
     return null;
 }
+
 
 export const updateVisuals = updateComfortTable;
