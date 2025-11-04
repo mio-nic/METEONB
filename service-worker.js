@@ -15,9 +15,7 @@ const ASSETS_TO_CACHE = [
   './bar.js',
   './manifest.json',
   './favicon.ico',
-  './notizie/notizie.html',
-  './pre/pre.html'
-];
+ ];
 
 
 
@@ -66,4 +64,5 @@ self.addEventListener('fetch', event => {
     }).catch(() => caches.match('/index.html')) // fallback offline
   );
 });
+
 
