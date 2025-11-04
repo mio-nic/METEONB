@@ -194,14 +194,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     prevDayButton.addEventListener('click', () => { 
         if(currentDayIndex > 0) {
-            window.history.pushState(null, '', `./tableh.php?dayIndex=${currentDayIndex - 1}`);
+            window.history.pushState(null, '', `./tableh.html?dayIndex=${currentDayIndex - 1}`);
             renderHourlyTable(allData.hourly, currentDayIndex - 1); 
         }
     });
 
     nextDayButton.addEventListener('click', () => { 
         if(currentDayIndex < allData.daily.time.length - 1) {
-            window.history.pushState(null, '', `./tableh.php?dayIndex=${currentDayIndex + 1}`);
+            window.history.pushState(null, '', `./tableh.html?dayIndex=${currentDayIndex + 1}`);
             renderHourlyTable(allData.hourly, currentDayIndex + 1); 
         }
     });
@@ -215,3 +215,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initData();
 
 });
+
