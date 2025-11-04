@@ -1,5 +1,5 @@
 // ⚡ Versione app
-const APP_VERSION = '1.0.7'; // Aggiorna questa versione ad ogni rilascio
+const APP_VERSION = '1.0.8'; // Aggiorna questa versione ad ogni rilascio
 const CACHE_NAME = `meteonb-${APP_VERSION}`;
 
 // 📂 File da mettere in cache
@@ -66,3 +66,4 @@ self.addEventListener('fetch', event => {
     }).catch(() => caches.match('./index.html')) // fallback offline
   );
 });
+
