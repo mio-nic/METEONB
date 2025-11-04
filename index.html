@@ -126,13 +126,19 @@
   <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/METEONB/service-worker.js')
-      .then(reg => console.log('✅ Service Worker registrato:', reg.scope))
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => {
+        console.log('✅ Service Worker registrato:', reg.scope);
+        
+        
+      })
       .catch(err => console.error('❌ Errore SW:', err));
   });
 }
 </script>
+
 </html>
+
 
 
 
