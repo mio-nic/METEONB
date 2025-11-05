@@ -3,59 +3,47 @@
 
 /**
  * Funzione di utilità per fornire una semplice raccomandazione sull'abbigliamento
- * basata sulla temperatura e sulla probabilità di precipitazioni.
+ * basata sulla temperatura (usiamo solo la temperatura standard).
  *
  * @param {number} temp - Temperatura in Celsius.
- * @param {number} precipitationProb - Probabilità di precipitazioni (0-100%).
  * @returns {string} Suggerimento di abbigliamento.
  */
-const getDressSuggestion = (temp, precipitationProb) => {
+const getDressSuggestion = (temp) => {
     const t = Number(temp);
-    const p = Number(precipitationProb);
-    let suggestion = '';
 
     if (isNaN(t)) {
         return "Dati non disponibili";
     }
 
-    // 1. Logica basata sulla Temperatura
+    // Logica basata sulla Temperatura
     if (t >= 30) {
-        suggestion = "☀️ Abbigliamento estivo leggerissimo";
+        return "☀️ Abbigliamento estivo leggerissimo";
     } else if (t >= 25) {
-        suggestion = "👕 Abbigliamento leggero (maglietta, pantaloncini)";
+        return "👕 Abbigliamento leggero (maglietta, pantaloncini)";
     } else if (t >= 20) {
-        suggestion = "👚 Abbigliamento primaverile/autunnale leggero";
+        return "👚 Abbigliamento primaverile/autunnale leggero";
     } else if (t >= 15) {
-        suggestion = "🧥 Strati leggeri (maglia a maniche lunghe, giacca leggera)";
+        return "🧥 Strati leggeri (maglia a maniche lunghe, giacca leggera)";
     } else if (t >= 10) {
-        suggestion = "🧣 Giacca media, maglione";
+        return "🧣 Giacca media, maglione";
     } else if (t >= 5) {
-        suggestion = "🧤 Abbigliamento pesante (cappotto, sciarpa)";
+        return "🧤 Abbigliamento pesante (cappotto, sciarpa)";
     } else {
-        suggestion = "🥶 Freddo estremo (giacca invernale, guanti, cappello)";
+        return "🥶 Freddo estremo (giacca invernale, guanti, cappello)";
     }
-
-    // 2. Aggiunta della logica per la Pioggia
-    if (p > 50) {
-        suggestion += " + ☔️ **Porta un ombrello!**";
-    } else if (p > 20) {
-        suggestion += " + ☂️ Potrebbe servire l'ombrello.";
-    }
-
-    return suggestion;
 };
 
 /**
  * Aggiorna il contenitore dell'abbigliamento con una tabella oraria semplificata.
  *
- * @param {object} allData - Oggetto completo dei dati meteo (da getWeatherData).
+ * @param {object} allData - Oggetto completo dei dati meteo.
  */
 export const generateHourlyDressTable = (allData) => {
     const container = document.getElementById('dress-table-container');
     
-    // Controllo di sicurezza: verifica che l'elemento HTML esista
+    // 1. Controllo di sicurezza
     if (!container) {
-        console.error("Elemento '#dress-table-container' non trovato. Impossibile eseguire il rendering della tabella Abbigliamento.");
+        console.error("Elemento '#dress-table-container' non trovato.");
         return;
     }
     
@@ -64,8 +52,9 @@ export const generateHourlyDressTable = (allData) => {
 
     const hourlyData = allData?.hourly;
 
-    if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0) {
-        container.innerHTML = '<p>Dati orari non disponibili per l\'abbigliamento.</p>';
+    // 2. Controllo dei dati minimi richiesti (time e temperature_2m)
+    if (!hourlyData || !hourlyData.time || !hourlyData.temperature_2m || hourlyData.time.length === 0) {
+        container.innerHTML = '<p>Dati orari essenziali (tempo/temperatura) non disponibili per l\'abbigliamento.</p>';
         return;
     }
 
@@ -75,34 +64,31 @@ export const generateHourlyDressTable = (allData) => {
             <thead>
                 <tr>
                     <th>Ora</th>
-                    <th>Temp. percepita</th>
-                    <th>Prob. Pioggia</th>
+                    <th>Temperatura</th>
                     <th>Raccomandazione</th>
                 </tr>
             </thead>
             <tbody>
     `;
 
-    // Visualizza le prossime 12 ore per una previsione ragionevole
+    // Visualizza le prossime 12 ore
     const numHoursToShow = 12;
 
     for (let i = 0; i < Math.min(hourlyData.time.length, numHoursToShow); i++) {
         const time = hourlyData.time[i];
-        // Usiamo la temperatura apparente per una raccomandazione più accurata
-        const apparentTemp = hourlyData.apparent_temperature[i]; 
-        const precipitationProb = hourlyData.precipitation_probability[i];
+        // ORA USIAMO SOLO temperature_2m, che è il dato confermato
+        const temp = hourlyData.temperature_2m[i]; 
         
         // Formatta l'ora (es. 14:00)
         const date = new Date(time);
         const formattedTime = date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
         
-        const suggestion = getDressSuggestion(apparentTemp, precipitationProb);
+        const suggestion = getDressSuggestion(temp);
 
         tableHtml += `
             <tr>
                 <td>${formattedTime}</td>
-                <td style="font-weight: bold;">${Math.round(apparentTemp)}°C</td>
-                <td>${Math.round(precipitationProb)}%</td>
+                <td style="font-weight: bold;">${Math.round(temp)}°C</td>
                 <td>${suggestion}</td>
             </tr>
         `;
@@ -113,6 +99,6 @@ export const generateHourlyDressTable = (allData) => {
         </table>
     `;
 
-    // Inserisce la tabella nel DOM
+    // 3. Inserisce la tabella nel DOM
     container.innerHTML = tableHtml;
 };
