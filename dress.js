@@ -1,213 +1,118 @@
-// dress.js - SOLO MODULO DI RENDERING DELLA TABELLA ABBIGLIAMENTO
-
-import { formatTime, getWeatherEmoji } from './main.js';
+// dress.js
+// Logica per l'abbigliamento e il rendering della tabella oraria associata.
 
 /**
- * Inietta gli stili CSS specifici per la tabella dell'abbigliamento
- * se non sono già presenti nel DOM.
+ * Funzione di utilità per fornire una semplice raccomandazione sull'abbigliamento
+ * basata sulla temperatura e sulla probabilità di precipitazioni.
+ *
+ * @param {number} temp - Temperatura in Celsius.
+ * @param {number} precipitationProb - Probabilità di precipitazioni (0-100%).
+ * @returns {string} Suggerimento di abbigliamento.
  */
-const injectDressStyles = () => {
-    if (document.getElementById('dress-table-styles')) {
+const getDressSuggestion = (temp, precipitationProb) => {
+    const t = Number(temp);
+    const p = Number(precipitationProb);
+    let suggestion = '';
+
+    if (isNaN(t)) {
+        return "Dati non disponibili";
+    }
+
+    // 1. Logica basata sulla Temperatura
+    if (t >= 30) {
+        suggestion = "☀️ Abbigliamento estivo leggerissimo";
+    } else if (t >= 25) {
+        suggestion = "👕 Abbigliamento leggero (maglietta, pantaloncini)";
+    } else if (t >= 20) {
+        suggestion = "👚 Abbigliamento primaverile/autunnale leggero";
+    } else if (t >= 15) {
+        suggestion = "🧥 Strati leggeri (maglia a maniche lunghe, giacca leggera)";
+    } else if (t >= 10) {
+        suggestion = "🧣 Giacca media, maglione";
+    } else if (t >= 5) {
+        suggestion = "🧤 Abbigliamento pesante (cappotto, sciarpa)";
+    } else {
+        suggestion = "🥶 Freddo estremo (giacca invernale, guanti, cappello)";
+    }
+
+    // 2. Aggiunta della logica per la Pioggia
+    if (p > 50) {
+        suggestion += " + ☔️ **Porta un ombrello!**";
+    } else if (p > 20) {
+        suggestion += " + ☂️ Potrebbe servire l'ombrello.";
+    }
+
+    return suggestion;
+};
+
+/**
+ * Aggiorna il contenitore dell'abbigliamento con una tabella oraria semplificata.
+ *
+ * @param {object} allData - Oggetto completo dei dati meteo (da getWeatherData).
+ */
+export const generateHourlyDressTable = (allData) => {
+    const container = document.getElementById('dress-table-container');
+    
+    // Controllo di sicurezza: verifica che l'elemento HTML esista
+    if (!container) {
+        console.error("Elemento '#dress-table-container' non trovato. Impossibile eseguire il rendering della tabella Abbigliamento.");
+        return;
+    }
+    
+    // Cancella l'eventuale messaggio di "Caricamento dati..."
+    container.innerHTML = ''; 
+
+    const hourlyData = allData?.hourly;
+
+    if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0) {
+        container.innerHTML = '<p>Dati orari non disponibili per l\'abbigliamento.</p>';
         return;
     }
 
-    const style = document.createElement('style');
-    style.id = 'dress-table-styles';
-    style.innerHTML = `
-        /* Variabili di colore specifiche per la temperatura */
-        :root {
-            --temp-low-color: #90CAF9; /* Blu chiaro */
-            --temp-high-color: #FFCDD2; /* Rosso chiaro */
-        }
-        
-        /* Stili per il wrapper scorrevole (CRUCIALE PER SCROLL ORIZZONTALE) */
-        .scrollable-table-wrapper {
-            width: 100%;
-            overflow-x: auto; 
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* Stili per la Tabella Oraria */
-        .hourly-dress-table {
-            table-layout: auto;
-            width: max-content; /* Permette alla tabella di espandersi */
-            border-collapse: collapse;
-            color: var(--text-color);
-            font-size: 0.9em;
-            overflow: hidden;
-            border-radius: 8px;
-        }
-
-        /* Stili per colonna sticky */
-        .sticky-col {
-            position: sticky;
-            left: 0;
-            z-index: 5; 
-            background-color: var(--table-row-odd-bg) !important; 
-            border-right: 1px solid var(--border-color);
-            font-weight: bold;
-            text-align: left !important;
-        }
-        .hourly-dress-table thead th:first-child {
-            background-color: var(--table-header-bg) !important;
-            z-index: 6; 
-        }
-        .dress-suggestion-row .sticky-col {
-            background-color: rgba(66, 161, 255, 0.2) !important;
-        }
-        .dress-suggestion-row td {
-             border-top: 2px solid var(--primary-color);
-        }
-        
-        /* Stili per il suggerimento di testo */
-        .clothing-suggestion-box {
-            padding: 4px; 
-            line-height: 1.2; 
-            font-weight: 500;
-        }
-    `;
-    document.head.appendChild(style);
-};
-
-
-/**
- * Determina il suggerimento di abbigliamento in base ai parametri meteo orari.
- */
-const getClothingSuggestion = (temp, precip, wind) => {
-    let suggestion = '';
-    let accessories = [];
-
-    // 1. Logica basata sulla temperatura (Abbigliamento Base)
-    if (temp < 4) {
-        suggestion = 'GIUBBOTTO PESANTE (Inverno)';
-        accessories.push('Cappello, Guanti e Sciarpa');
-    } else if (temp < 10) {
-        suggestion = 'Giubbotto Pesante (Autunno/Inverno)';
-        accessories.push('Maglione di Lana');
-    } else if (temp < 14) {
-        suggestion = 'Giubbotto Leggero + Felpa';
-    } else if (temp < 18) {
-        suggestion = 'Maglione o Felpa pesante';
-    } else if (temp < 22) {
-        suggestion = 'Maglietta Lunga o Polo';
-    } else if (temp < 26) {
-        suggestion = 'Maglietta Leggera';
-    } else {
-        suggestion = 'ABBIGLIAMENTO LEGGERO (Estivo)';
-        accessories.push('Occhiali da sole 🕶️');
-    }
-
-    // 2. Logica per vento e pioggia (Accessori Aggiuntivi)
-    if (precip >= 1.5) { 
-        accessories.push('Impermeabile e Ombrello ☔');
-    } else if (precip > 0.1) {
-        accessories.push('Giacca idrorepellente');
-    }
-
-    if (wind > 35 && temp < 20) {
-        accessories.push('Antivento Aggiuntivo');
-    }
-
-    // 3. Combinazione del risultato
-    const accessoryStr = accessories.length > 0 ? 
-        `<br/><span style="font-size: 0.75em; color: var(--secondary-text-color); font-weight: normal;">${accessories.join(' - ')}</span>` 
-        : '';
-        
-    return `<div class="clothing-suggestion-box">${suggestion}</div>${accessoryStr}`;
-};
-
-
-/**
- * Genera la tabella oraria dell'abbigliamento per le prossime 24 ore.
- * @param {object} hourlyData - Oggetto contenente i dati orari (hourly) dell'API Open-Meteo.
- * @returns {string} Il markup HTML della tabella.
- */
-export const generateHourlyDressTable = (hourlyData) => {
-    // 1. Inietta gli stili all'avvio della funzione
-    injectDressStyles(); 
-    
-    if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0) {
-        return '<p style="color: red;">Dati orari non disponibili.</p>';
-    }
-
-    const now = new Date();
-    const startIndex = hourlyData.time.findIndex(timeStr => new Date(timeStr) >= now);
-
-    if (startIndex === -1) {
-        return '<p style="color: red;">Ora corrente non trovata nei dati.</p>';
-    }
-
-    const hoursToDisplay = 24;
-    const end = Math.min(startIndex + hoursToDisplay, hourlyData.time.length);
-    const hourlyForecasts = [];
-
-    for (let i = startIndex; i < end; i++) {
-        hourlyForecasts.push({
-            time: hourlyData.time[i],
-            temp: hourlyData.temperature_2m[i],
-            precip: hourlyData.precipitation[i],
-            wind: hourlyData.wind_speed_10m[i],
-            emoji: getWeatherEmoji(hourlyData, i)
-        });
-    }
-
-    // Costruzione della tabella 
-    let html = `
-    <div class="scrollable-table-wrapper"> <table class="hourly-dress-table">
+    let tableHtml = `
+        <h3 class="section-title">Consigli Orari Abbigliamento</h3>
+        <table class="hourly-dress-table custom-table">
             <thead>
                 <tr>
-                    <th class="sticky-col" style="min-width: 100px;">
-                        Dettaglio
-                    </th>
-                    ${hourlyForecasts.map(f => `
-                        <th style="min-width: 60px;">
-                            ${formatTime(f.time).substring(0, 5)}
-                        </th>
-                    `).join('')}
+                    <th>Ora</th>
+                    <th>Temp. percepita</th>
+                    <th>Prob. Pioggia</th>
+                    <th>Raccomandazione</th>
                 </tr>
             </thead>
             <tbody>
-                
-                <tr> 
-                    <td class="sticky-col">
-                        Temperatura
-                    </td>
-                    ${hourlyForecasts.map(f => {
-                        const tempStyle = f.temp < 10 ? 'color: var(--temp-low-color);' : f.temp > 25 ? 'color: var(--temp-high-color);' : ''; 
-                        return `
-                            <td style="font-size: 1.1em; font-weight: bold; ${tempStyle}">
-                                ${Math.round(f.temp)}°C
-                            </td>
-                        `;
-                    }).join('')}
-                </tr>
-                
-                <tr class="weather-row">
-                    <td class="sticky-col">
-                        Meteo
-                    </td>
-                    ${hourlyForecasts.map(f => `
-                        <td style="font-size: 1.5em; padding: 5px;">
-                            ${f.emoji}
-                        </td>
-                    `).join('')}
-                </tr>
-                
-                <tr class="dress-suggestion-row">
-                    <td class="sticky-col" style="font-weight: bold; color: var(--primary-color);">
-                        ABBIGLIAMENTO
-                    </td>
-                    ${hourlyForecasts.map(f => `
-                        <td style="font-size: 0.85em; padding: 5px 2px;">
-                            ${getClothingSuggestion(f.temp, f.precip, f.wind)}
-                        </td>
-                    `).join('')}
-                </tr>
-
-            </tbody>
-        </table>
-    </div> 
     `;
 
-    return html;
+    // Visualizza le prossime 12 ore per una previsione ragionevole
+    const numHoursToShow = 12;
+
+    for (let i = 0; i < Math.min(hourlyData.time.length, numHoursToShow); i++) {
+        const time = hourlyData.time[i];
+        // Usiamo la temperatura apparente per una raccomandazione più accurata
+        const apparentTemp = hourlyData.apparent_temperature[i]; 
+        const precipitationProb = hourlyData.precipitation_probability[i];
+        
+        // Formatta l'ora (es. 14:00)
+        const date = new Date(time);
+        const formattedTime = date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        
+        const suggestion = getDressSuggestion(apparentTemp, precipitationProb);
+
+        tableHtml += `
+            <tr>
+                <td>${formattedTime}</td>
+                <td style="font-weight: bold;">${Math.round(apparentTemp)}°C</td>
+                <td>${Math.round(precipitationProb)}%</td>
+                <td>${suggestion}</td>
+            </tr>
+        `;
+    }
+
+    tableHtml += `
+            </tbody>
+        </table>
+    `;
+
+    // Inserisce la tabella nel DOM
+    container.innerHTML = tableHtml;
 };
