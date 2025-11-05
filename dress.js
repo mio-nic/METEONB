@@ -45,21 +45,23 @@ const getClothingSuggestion = (temp, precip, wind) => {
 
     // 3. Combinazione del risultato in un formato pulito
     const accessoryStr = accessories.length > 0 ? 
-        `<br/><span class="text-xs text-gray-500 font-normal">${accessories.join(' - ')}</span>` 
+        `<br/><span style="font-size: 0.75em; color: var(--secondary-text-color); font-weight: normal;">${accessories.join(' - ')}</span>` 
         : '';
-
-    return `<div class="p-1 leading-snug font-medium">${suggestion}</div>${accessoryStr}`;
+        
+    // Applichiamo uno stile in linea per il testo principale per mantenere la leggibilità anche senza classi Tailwind
+    return `<div style="padding: 4px; line-height: 1.2; font-weight: 500;">${suggestion}</div>${accessoryStr}`;
 };
 
 
 /**
- * Genera la tabella oraria dell'abbigliamento per le prossime 24 ore.
+ * Genera la tabella oraria dell'abbigliamento per le prossime 24 ore,
+ * utilizzando le classi CSS fornite per il tema scuro.
  * @param {object} hourlyData - Oggetto contenente i dati orari (hourly) dell'API Open-Meteo.
  * @returns {string} Il markup HTML della tabella.
  */
 export const generateHourlyDressTable = (hourlyData) => {
     if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0) {
-        return '<p class="text-red-500">Dati orari non disponibili.</p>';
+        return '<p style="color: red;">Dati orari non disponibili.</p>';
     }
 
     const now = new Date();
@@ -67,7 +69,7 @@ export const generateHourlyDressTable = (hourlyData) => {
     const startIndex = hourlyData.time.findIndex(timeStr => new Date(timeStr) >= now);
 
     if (startIndex === -1) {
-        return '<p class="text-red-500">Ora corrente non trovata nei dati.</p>';
+        return '<p style="color: red;">Ora corrente non trovata nei dati.</p>';
     }
 
     const hoursToDisplay = 24;
@@ -85,55 +87,56 @@ export const generateHourlyDressTable = (hourlyData) => {
         });
     }
 
-    // Costruzione della tabella orizzontale scrollabile (Tailwind CSS)
+    // Costruzione della tabella (Utilizzando le classi CSS fornite)
     let html = `
-    <div class="overflow-x-auto w-full shadow-xl rounded-xl">
-        <table class="min-w-full divide-y divide-gray-200 border border-gray-200">
-            <thead class="bg-gray-100">
+    <div class="table-container" style="overflow-x: auto; padding: 0;">
+        <table class="hourly-dress-table">
+            <thead>
                 <tr>
-                    <th class="sticky left-0 bg-gray-200 text-left text-xs font-semibold text-gray-700 uppercase p-3 w-36 min-w-[144px] border-r border-gray-300">
+                    <th class="sticky-col" style="min-width: 100px; text-align: left;">
                         Dettaglio
                     </th>
                     ${hourlyForecasts.map(f => `
-                        <th class="p-3 text-center text-xs font-bold text-indigo-700 uppercase min-w-[72px] border-l border-gray-200">
+                        <th style="min-width: 60px; text-align: center;">
                             ${formatTime(f.time).substring(0, 5)}
                         </th>
                     `).join('')}
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody>
                 
-                <!-- Riga Temperatura -->
-                <tr>
-                    <td class="sticky left-0 bg-gray-50 text-left text-sm font-medium text-gray-800 whitespace-nowrap p-3 border-r border-gray-200">
-                        Temperatura
-                    </td>
-                    ${hourlyForecasts.map(f => `
-                        <td class="p-3 text-center text-base font-bold ${f.temp < 10 ? 'bg-blue-50 text-blue-700' : f.temp > 25 ? 'bg-red-50 text-red-700' : 'text-gray-700'}">
-                            ${Math.round(f.temp)}°C
-                        </td>
-                    `).join('')}
-                </tr>
-
-                <!-- Riga Meteo/Icona -->
-                <tr>
-                    <td class="sticky left-0 bg-gray-50 text-left text-sm font-medium text-gray-800 whitespace-nowrap p-3 border-r border-gray-200">
+                ${hourlyForecasts.map((f, index) => {
+                    const rowClass = index % 2 === 0 ? 'even-row' : 'odd-row';
+                    const tempStyle = f.temp < 10 ? 'color: #90CAF9;' : f.temp > 25 ? 'color: #FFCDD2;' : ''; // Stili in linea per i colori temp
+                    return `
+                        <tr>
+                            <td class="sticky-col" style="text-align: left; font-weight: 500;">
+                                Temperatura
+                            </td>
+                            ${hourlyForecasts.map(f => `
+                                <td style="font-size: 1.1em; font-weight: bold; ${tempStyle}">
+                                    ${Math.round(f.temp)}°C
+                                </td>
+                            `).join('')}
+                        </tr>
+                    `;
+                }).slice(0, 1).join('')} <tr class="weather-row">
+                    <td class="sticky-col" style="text-align: left; font-weight: 500;">
                         Meteo
                     </td>
                     ${hourlyForecasts.map(f => `
-                        <td class="p-3 text-center text-sm">
+                        <td style="font-size: 1.5em; padding: 5px;">
                             ${f.emoji}
                         </td>
                     `).join('')}
                 </tr>
                 
-                <!-- Riga Abbigliamento (Focus) -->
-                <tr class="border-t-2 border-indigo-400">
-                    <td class="sticky left-0 bg-indigo-50 text-left text-sm font-extrabold text-indigo-800 whitespace-nowrap p-3 border-r border-indigo-400">
+                <tr class="dress-suggestion-row" style="border-top: 2px solid var(--primary-color);">
+                    <td class="sticky-col" style="text-align: left; font-weight: bold; background-color: rgba(66, 161, 255, 0.2) !important; color: var(--primary-color);">
                         ABBIGLIAMENTO
                     </td>
                     ${hourlyForecasts.map(f => `
-                        <td class="p-1 text-center text-xs bg-indigo-100/50 hover:bg-indigo-100 transition duration-150 ease-in-out border-l border-gray-200">
+                        <td style="font-size: 0.85em; padding: 5px 2px;">
                             ${getClothingSuggestion(f.temp, f.precip, f.wind)}
                         </td>
                     `).join('')}
@@ -143,6 +146,16 @@ export const generateHourlyDressTable = (hourlyData) => {
         </table>
     </div>
     `;
+
+    // Sostituire le classi "odd/even-row" per un'applicazione corretta dello stile scuro
+    html = html.replace(/<tr>\s*<td/g, '<tr><td') // Rimuove spazio dopo <tr>
+               .replace(/<tr/g, (match, offset, original) => {
+                   // Controlla se è una riga pari o dispari per applicare lo sfondo corretto
+                   const rowNumber = original.substring(0, offset).split('<tr>').length;
+                   const bgClass = rowNumber % 2 === 0 ? 'style="background-color: var(--table-row-even-bg);"' : 'style="background-color: var(--table-row-odd-bg);"';
+                   return `<tr ${bgClass}`;
+               });
+
 
     return html;
 };
