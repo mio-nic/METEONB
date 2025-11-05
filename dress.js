@@ -19,10 +19,17 @@ const injectDressStyles = () => {
             --temp-high-color: #FFCDD2; /* Rosso chiaro */
         }
         
+        /* Stili per il wrapper scorrevole (CRUCIALE PER SCROLL OR.) */
+        .scrollable-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         /* Stili per la Tabella Oraria (Override o Aggiunte) */
         .hourly-dress-table {
             table-layout: auto;
-            width: 100%;
+            width: max-content; /* Permette alla tabella di espandersi orizzontalmente */
             border-collapse: collapse;
             color: var(--text-color);
             font-size: 0.9em;
@@ -151,8 +158,7 @@ export const generateHourlyDressTable = (hourlyData) => {
 
     // Costruzione della tabella 
     let html = `
-    <div class="table-container">
-        <table class="hourly-dress-table">
+    <div class="scrollable-table-wrapper"> <table class="hourly-dress-table">
             <thead>
                 <tr>
                     <th class="sticky-col" style="min-width: 100px;">
@@ -206,8 +212,7 @@ export const generateHourlyDressTable = (hourlyData) => {
 
             </tbody>
         </table>
-    </div>
-    `;
+    </div> `;
 
     return html;
 };
