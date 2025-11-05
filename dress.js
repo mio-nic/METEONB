@@ -1,5 +1,5 @@
 // dress.js
-// Logica per l'abbigliamento e il rendering della tabella oraria associata.
+// Logica per l'abbigliamento e il rendering della tabella oraria trasposta.
 
 /**
  * Funzione di utilità per fornire una semplice raccomandazione sull'abbigliamento
@@ -12,91 +12,92 @@ const getDressSuggestion = (temp) => {
     const t = Number(temp);
 
     if (isNaN(t)) {
-        return "Dati non disponibili";
+        return "N/D";
     }
 
     // Logica basata sulla Temperatura
     if (t >= 30) {
-        return "☀️ Abbigliamento estivo leggerissimo";
+        return "☀️ Leggerissimo";
     } else if (t >= 25) {
-        return "👕 Abbigliamento leggero (maglietta, pantaloncini)";
+        return "👕 Leggero";
     } else if (t >= 20) {
-        return "👚 Abbigliamento primaverile/autunnale leggero";
+        return "👚 Mezza manica";
     } else if (t >= 15) {
-        return "🧥 Strati leggeri (maglia a maniche lunghe, giacca leggera)";
+        return "🧥 Strati leggeri";
     } else if (t >= 10) {
-        return "🧣 Giacca media, maglione";
+        return "🧣 Giacca media";
     } else if (t >= 5) {
-        return "🧤 Abbigliamento pesante (cappotto, sciarpa)";
+        return "🧤 Cappotto";
     } else {
-        return "🥶 Freddo estremo (giacca invernale, guanti, cappello)";
+        return "🥶 Invernale";
     }
 };
 
 /**
- * Aggiorna il contenitore dell'abbigliamento con una tabella oraria semplificata.
+ * Aggiorna il contenitore dell'abbigliamento con una tabella oraria trasposta.
  *
  * @param {object} allData - Oggetto completo dei dati meteo.
  */
 export const generateHourlyDressTable = (allData) => {
     const container = document.getElementById('dress-table-container');
     
-    // 1. Controllo di sicurezza
     if (!container) {
         console.error("Elemento '#dress-table-container' non trovato.");
         return;
     }
     
-    // Cancella l'eventuale messaggio di "Caricamento dati..."
     container.innerHTML = ''; 
 
     const hourlyData = allData?.hourly;
 
-    // 2. Controllo dei dati minimi richiesti (time e temperature_2m)
     if (!hourlyData || !hourlyData.time || !hourlyData.temperature_2m || hourlyData.time.length === 0) {
         container.innerHTML = '<p>Dati orari essenziali (tempo/temperatura) non disponibili per l\'abbigliamento.</p>';
         return;
     }
 
-    let tableHtml = `
-        <h3 class="section-title">Consigli Orari Abbigliamento</h3>
-        <table class="hourly-dress-table custom-table">
-            <thead>
-                <tr>
-                    <th>Ora</th>
-                    <th>Temperatura</th>
-                    <th>Raccomandazione</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
+    const numHoursToShow = 10; // Visualizziamo 10 ore (puoi cambiarlo)
 
-    // Visualizza le prossime 12 ore
-    const numHoursToShow = 12;
-
+    // 1. Array per raccogliere le righe di dati
+    const hours = [];
+    const temperatures = [];
+    const suggestions = [];
+    
     for (let i = 0; i < Math.min(hourlyData.time.length, numHoursToShow); i++) {
         const time = hourlyData.time[i];
-        // ORA USIAMO SOLO temperature_2m, che è il dato confermato
         const temp = hourlyData.temperature_2m[i]; 
         
         // Formatta l'ora (es. 14:00)
         const date = new Date(time);
-        const formattedTime = date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        const formattedHour = date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
         
-        const suggestion = getDressSuggestion(temp);
-
-        tableHtml += `
-            <tr>
-                <td>${formattedTime}</td>
-                <td style="font-weight: bold;">${Math.round(temp)}°C</td>
-                <td>${suggestion}</td>
-            </tr>
-        `;
+        hours.push(formattedHour);
+        temperatures.push(`${Math.round(temp)}°C`);
+        suggestions.push(getDressSuggestion(temp));
     }
 
-    tableHtml += `
-            </tbody>
-        </table>
+    // 2. Costruzione della tabella TRASPOSTA
+    let tableHtml = `
+        <h3 class="section-title">Consigli Orari Abbigliamento (Prossime ${hours.length} Ore)</h3>
+        <div class="table-scroll-container">
+            <table class="hourly-dress-table transposed-table">
+                <thead>
+                    <tr>
+                        <th class="header-col">Ora:</th>
+                        ${hours.map(h => `<th>${h}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th class="header-col">Temperatura:</th>
+                        ${temperatures.map(t => `<td class="temp-data">${t}</td>`).join('')}
+                    </tr>
+                    <tr>
+                        <th class="header-col">Abbigliamento:</th>
+                        ${suggestions.map(s => `<td>${s}</td>`).join('')}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     `;
 
     // 3. Inserisce la tabella nel DOM
