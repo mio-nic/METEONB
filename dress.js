@@ -3,7 +3,7 @@ import { formatTime, getWeatherEmoji } from './main.js';
 /**
  * Determina il suggerimento di abbigliamento in base ai parametri meteo orari.
  * Logica: Più dettagliato con l'abbigliamento base + accessori in base a pioggia/vento.
- * * @param {number} temp - Temperatura in °C.
+ * @param {number} temp - Temperatura in °C.
  * @param {number} precip - Precipitazione oraria in mm.
  * @param {number} wind - Velocità del vento in km/h.
  * @returns {string} Suggerimento di abbigliamento in formato HTML.
@@ -48,14 +48,12 @@ const getClothingSuggestion = (temp, precip, wind) => {
         `<br/><span style="font-size: 0.75em; color: var(--secondary-text-color); font-weight: normal;">${accessories.join(' - ')}</span>` 
         : '';
         
-    // Applichiamo uno stile in linea per il testo principale per mantenere la leggibilità anche senza classi Tailwind
     return `<div style="padding: 4px; line-height: 1.2; font-weight: 500;">${suggestion}</div>${accessoryStr}`;
 };
 
 
 /**
- * Genera la tabella oraria dell'abbigliamento per le prossime 24 ore,
- * utilizzando le classi CSS fornite per il tema scuro.
+ * Genera la tabella oraria dell'abbigliamento per le prossime 24 ore.
  * @param {object} hourlyData - Oggetto contenente i dati orari (hourly) dell'API Open-Meteo.
  * @returns {string} Il markup HTML della tabella.
  */
@@ -82,14 +80,13 @@ export const generateHourlyDressTable = (hourlyData) => {
             temp: hourlyData.temperature_2m[i],
             precip: hourlyData.precipitation[i],
             wind: hourlyData.wind_speed_10m[i],
-            // Uso getWeatherEmoji da main.js
             emoji: getWeatherEmoji(hourlyData, i)
         });
     }
 
-    // Costruzione della tabella (Utilizzando le classi CSS fornite)
+    // Costruzione della tabella (Utilizzando le classi CSS fornite nell'HTML)
     let html = `
-    <div class="table-container" style="overflow-x: auto; padding: 0;">
+    <div class="table-container">
         <table class="hourly-dress-table">
             <thead>
                 <tr>
@@ -105,22 +102,21 @@ export const generateHourlyDressTable = (hourlyData) => {
             </thead>
             <tbody>
                 
-                ${hourlyForecasts.map((f, index) => {
-                    const rowClass = index % 2 === 0 ? 'even-row' : 'odd-row';
-                    const tempStyle = f.temp < 10 ? 'color: #90CAF9;' : f.temp > 25 ? 'color: #FFCDD2;' : ''; // Stili in linea per i colori temp
-                    return `
-                        <tr>
-                            <td class="sticky-col" style="text-align: left; font-weight: 500;">
-                                Temperatura
+                <tr> 
+                    <td class="sticky-col" style="text-align: left; font-weight: 500;">
+                        Temperatura
+                    </td>
+                    ${hourlyForecasts.map(f => {
+                        const tempStyle = f.temp < 10 ? 'color: var(--temp-low-color);' : f.temp > 25 ? 'color: var(--temp-high-color);' : ''; 
+                        return `
+                            <td style="font-size: 1.1em; font-weight: bold; ${tempStyle}">
+                                ${Math.round(f.temp)}°C
                             </td>
-                            ${hourlyForecasts.map(f => `
-                                <td style="font-size: 1.1em; font-weight: bold; ${tempStyle}">
-                                    ${Math.round(f.temp)}°C
-                                </td>
-                            `).join('')}
-                        </tr>
-                    `;
-                }).slice(0, 1).join('')} <tr class="weather-row">
+                        `;
+                    }).join('')}
+                </tr>
+                
+                <tr class="weather-row">
                     <td class="sticky-col" style="text-align: left; font-weight: 500;">
                         Meteo
                     </td>
@@ -132,7 +128,7 @@ export const generateHourlyDressTable = (hourlyData) => {
                 </tr>
                 
                 <tr class="dress-suggestion-row" style="border-top: 2px solid var(--primary-color);">
-                    <td class="sticky-col" style="text-align: left; font-weight: bold; background-color: rgba(66, 161, 255, 0.2) !important; color: var(--primary-color);">
+                    <td class="sticky-col" style="text-align: left; font-weight: bold; color: var(--primary-color);">
                         ABBIGLIAMENTO
                     </td>
                     ${hourlyForecasts.map(f => `
@@ -147,21 +143,8 @@ export const generateHourlyDressTable = (hourlyData) => {
     </div>
     `;
 
-    // Sostituire le classi "odd/even-row" per un'applicazione corretta dello stile scuro
-    html = html.replace(/<tr>\s*<td/g, '<tr><td') // Rimuove spazio dopo <tr>
-               .replace(/<tr/g, (match, offset, original) => {
-                   // Controlla se è una riga pari o dispari per applicare lo sfondo corretto
-                   const rowNumber = original.substring(0, offset).split('<tr>').length;
-                   const bgClass = rowNumber % 2 === 0 ? 'style="background-color: var(--table-row-even-bg);"' : 'style="background-color: var(--table-row-odd-bg);"';
-                   return `<tr ${bgClass}`;
-               });
-
-
     return html;
 };
 
-/**
- * Esporta la funzione principale che sarà usata nel file table.js (o index.html).
- */
-export { getClothingSuggestion }; // Esportata solo per test interni/debug se necessario
-export default generateHourlyDressTable;
+// Rimuovo l'export default e lascio solo l'export con nome per compatibilità con table.js
+// export { getClothingSuggestion }; // Mantenuta per debug se volessi
