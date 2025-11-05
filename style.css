@@ -936,4 +936,72 @@ tr:hover {
     .sport-table {
         min-width: 500px; /* Assicura che la tabella non si rompa troppo su mobile */
     }
+
     #
+
+
+	/*abbigliamento*/
+	/* Stile base per la tabella dell'abbigliamento */
+.hourly-dress-table {
+    width: 100%;
+    border-collapse: collapse; /* Rimuove lo spazio tra i bordi delle celle */
+    margin-top: 15px;
+    font-size: 0.95em;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Ombra leggera per evidenziare */
+    border-radius: 8px; /* Bordi arrotondati */
+    overflow: hidden; /* Assicura che i bordi arrotondati si applichino */
+}
+
+/* Stile per l'intestazione della tabella */
+.hourly-dress-table thead th {
+    background-color: #2c3e50; /* Sfondo scuro per l'intestazione */
+    color: white; /* Testo bianco */
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+}
+
+/* Stile per le righe nel corpo della tabella */
+.hourly-dress-table tbody tr {
+    border-bottom: 1px solid #ecf0f1; /* Linea divisoria leggera tra le righe */
+    transition: background-color 0.3s ease; /* Transizione per l'effetto hover */
+}
+
+/* Effetto al passaggio del mouse (hover) sulle righe */
+.hourly-dress-table tbody tr:hover {
+    background-color: #f8f9fa; /* Sfondo leggermente grigio al passaggio */
+}
+
+/* Stile per le celle della tabella */
+.hourly-dress-table tbody td {
+    padding: 10px 15px;
+    vertical-align: middle;
+}
+
+/* Colore alternato per le righe (a strisce) per migliore leggibilità */
+.hourly-dress-table tbody tr:nth-child(even) {
+    background-color: #f4f6f9; /* Colore più chiaro per le righe pari */
+}
+
+/* Stile specifico per le colonne chiave (Ora e Temperatura) */
+.hourly-dress-table tbody tr td:first-child { /* Colonna Ora */
+    font-weight: bold;
+    color: #34495e;
+}
+
+.hourly-dress-table tbody tr td:nth-child(2) { /* Colonna Temp. percepita */
+    color: #e74c3c; /* Colore rosso per la temperatura */
+}
+
+.hourly-dress-table tbody tr td:nth-child(3) { /* Colonna Prob. Pioggia */
+    color: #3498db; /* Colore blu per la probabilità di pioggia */
+}
+
+/* Stile per il titolo di sezione sopra la tabella (se usato) */
+.section-title {
+    color: #34495e;
+    font-size: 1.4em;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #bdc3c7;
+    padding-bottom: 5px;
+}
