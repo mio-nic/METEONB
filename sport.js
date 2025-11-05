@@ -25,63 +25,49 @@ const calculateFavorability = (activity, dayData) => {
     const wind = dayData.wind_speed_10m_max;
 
     let score = 0;
-const maxScore = 400; // 4 fattori * 100 max
+    const maxScore = 400; // 4 fattori * 100 max
 
-switch (activity) {
-    case 'pesca':
-        // 🎣 Condizioni Ideali: Temp (10-25°C), Zero Pioggia (0%), Poco Vento (<= 5 km/h), Umidità Neutra
-        // NOTE: Ho impostato 0% di pioggia per 100 punti, rendendolo più severo.
-        score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); // Intervallo intermedio più stretto
-        score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); // Solo 0% prende 100, <= 5% prende 60
-        score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); // Massimi 100 punti solo per vento molto basso (<= 5 km/h)
-        score += 100; // Umidità neutra (fattore non discriminante)
-        break;
-          
-    case 'escursione':
-        // 🥾 Condizioni Ideali: Temp (15-25°C), Bassa Umidità (<= 50%), Zero Pioggia (0%), Poco Vento (<= 10 km/h)
-        score += (temp >= 15 && temp <= 25) ? 100 : (temp >= 10 && temp <= 30 ? 60 : 20); // Intervallo intermedio ridotto
-        score += (humidity <= 50) ? 100 : (humidity <= 70 ? 60 : 20); // Massimi 100 punti solo per umidità bassa (<= 50%)
-        score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10); // Zero Pioggia rigoroso (0%)
-        score += (wind <= 10) ? 100 : (wind <= 20 ? 60 : 20); // Vento massimo 10 km/h per 100 punti
-        break;
+    switch (activity) {
+        case 'pesca':
+            // 🎣 Condizioni Ideali: Temp (10-25°C), Zero Pioggia (0%), Poco Vento (<= 5 km/h), Umidità Neutra
+            // NOTE: Ho impostato 0% di pioggia per 100 punti, rendendolo più severo.
+            score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); // Intervallo intermedio più stretto
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); // Solo 0% prende 100, <= 5% prende 60
+            score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); // Massimi 100 punti solo per vento molto basso (<= 5 km/h)
+            score += 100; // Umidità neutra (fattore non discriminante)
+            break;
+            
+        case 'escursione':
+            // 🥾 Condizioni Ideali: Temp (15-25°C), Bassa Umidità (<= 50%), Zero Pioggia (0%), Poco Vento (<= 10 km/h)
+            score += (temp >= 15 && temp <= 25) ? 100 : (temp >= 10 && temp <= 30 ? 60 : 20); // Intervallo intermedio ridotto
+            score += (humidity <= 50) ? 100 : (humidity <= 70 ? 60 : 20); // Massimi 100 punti solo per umidità bassa (<= 50%)
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10); // Zero Pioggia rigoroso (0%)
+            score += (wind <= 10) ? 100 : (wind <= 20 ? 60 : 20); // Vento massimo 10 km/h per 100 punti
+            break;
 
-    case 'influenza':
-        // 🤧 Rischio Basso (Score Alto) = Favorabilità Bassa (Risk Basso). Influenza favorita da: Freddo (<= 5°C), Alta Umidità (>= 80%), Pioggia/Umidità (>= 60%), Poco Vento (<= 5 km/h)
-        let risk = 0;
-        // La condizione di rischio (influenza) è più severa (più facile ottenere un rischio alto):
-        risk += (temp <= 5) ? 100 : (temp <= 10 ? 70 : 30); // Freddo più severo per alto rischio (<= 5°C)
-        risk += (humidity >= 80) ? 100 : (humidity >= 60 ? 70 : 30); // Umidità molto alta per alto rischio (>= 80%)
-        risk += (precipProb >= 60) ? 100 : (precipProb >= 30 ? 70 : 30); // Alta pioggia/umidità più severa per alto rischio (>= 60%)
-        risk += (wind <= 5) ? 100 : 30; // Poco vento molto severo (<= 5 km/h) per alto rischio
-        score = maxScore - risk;
-        break;
+        /* RIMOSSO: case 'influenza':
+        // ... Logica di calcolo del rischio influenza ...
+        break; */
 
-    case 'polline':
-        // 🌳 Rischio Basso (Score Alto) = Favorabilità Bassa (Risk Basso). Polline favorito da: Caldo (> 25°C), Bassa Umidità (< 40%), Vento Moderato (5-15 km/h), Assenza di Pioggia (0%)
-        let pollenRisk = 0;
-        // Alto rischio polline (più severo per il caldo):
-        pollenRisk += (temp >= 25) ? 100 : (temp >= 20 ? 70 : 30); // Più caldo (>= 25°C) per alto rischio
-        pollenRisk += (humidity <= 40) ? 100 : (humidity <= 60 ? 70 : 30); // Umidità molto bassa (<= 40%) per alto rischio
-        pollenRisk += (wind >= 5 && wind <= 15) ? 100 : 30; // Vento ideale per la diffusione (5-15 km/h) per alto rischio.
-        pollenRisk += (precipProb === 0) ? 100 : 30; // Nessuna pioggia rigorosa (0%) per alto rischio
-        score = maxScore - pollenRisk;
-        break;
+        /* RIMOSSO: case 'polline':
+        // ... Logica di calcolo del rischio polline ...
+        break; */
 
-    case 'guida':
-        // 🚗 Condizioni Ideali: Temp (10-25°C), Zero Pioggia (0%), Poco Vento (<= 15 km/h), Bassa Umidità (<= 60%)
-        score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); // Intervallo ideale più stretto
-        score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); // Zero pioggia rigoroso (0%)
-        score += (wind <= 15) ? 100 : (wind <= 25 ? 60 : 20); // Vento massimo 15 km/h per 100 punti
-        score += (humidity <= 60) ? 100 : (humidity <= 80 ? 60 : 20); // Umidità massima 60% per 100 punti
-        break;
-          
-    case 'sfalcio_erba':
-        // 🚜 Condizioni Ideali: Temp Mite (20-28°C), Zero Pioggia (0%), Vento Nullo (<= 5 km/h), Umidità Bassa (<= 40%)
-        score += (temp >= 20 && temp <= 28) ? 100 : (temp >= 15 && temp <= 30 ? 60 : 20); // Intervallo ideale più stretto
-        score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10); // Zero pioggia rigoroso (0%)
-        score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); // Vento molto basso (<= 5 km/h) per 100 punti
-        score += (humidity <= 40) ? 100 : (humidity <= 60 ? 60 : 20); // Umidità molto bassa (<= 40%) per 100 punti
-        break;
+        case 'guida':
+            // 🚗 Condizioni Ideali: Temp (10-25°C), Zero Pioggia (0%), Poco Vento (<= 15 km/h), Bassa Umidità (<= 60%)
+            score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); // Intervallo ideale più stretto
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); // Zero pioggia rigoroso (0%)
+            score += (wind <= 15) ? 100 : (wind <= 25 ? 60 : 20); // Vento massimo 15 km/h per 100 punti
+            score += (humidity <= 60) ? 100 : (humidity <= 80 ? 60 : 20); // Umidità massima 60% per 100 punti
+            break;
+            
+        case 'sfalcio_erba':
+            // 🚜 Condizioni Ideali: Temp Mite (20-28°C), Zero Pioggia (0%), Vento Nullo (<= 5 km/h), Umidità Bassa (<= 40%)
+            score += (temp >= 20 && temp <= 28) ? 100 : (temp >= 15 && temp <= 30 ? 60 : 20); // Intervallo ideale più stretto
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10); // Zero pioggia rigoroso (0%)
+            score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); // Vento molto basso (<= 5 km/h) per 100 punti
+            score += (humidity <= 40) ? 100 : (humidity <= 60 ? 60 : 20); // Umidità molto bassa (<= 40%) per 100 punti
+            break;
 
         default:
             score = maxScore * 0.5;
@@ -164,7 +150,10 @@ const generateSportTable = () => {
     const sportSelect = document.getElementById('sport-select');
     
     // Titolo dinamico
-    const activityName = sportSelect.options[sportSelect.selectedIndex].text;
+    // Controlla se l'attività corrente è ancora nel menù (se non lo è, usa il default 'Escursione')
+    const selectedOption = Array.from(sportSelect.options).find(option => option.value === activity);
+    let activityName = selectedOption ? selectedOption.text : 'Attività';
+
     let tableHTML = `<h2 style="margin-top: 15px;">Livello di ${activityName} per ${currentWeatherData.cityName || 'la Città Corrente'}</h2>`;
     tableHTML += `<div class="table-container sport-table-container"><table class="sport-table"><thead><tr>`;
     
@@ -245,8 +234,6 @@ const ensureUIInitialized = () => {
                 <select id="sport-select" class="custom-select" style="padding: 5px; border-radius: 5px;">
                     <option value="pesca">🎣 Pesca</option>
                     <option value="escursione">🚶 Escursione</option>
-                    <option value="influenza">🤧 Rischio Influenza</option>
-                    <option value="polline">🌿 Rischio Polline</option>
                     <option value="guida">🚗 Guida</option>
                     <option value="sfalcio_erba">🌾 Sfalcio Erba</option>
                 </select>
@@ -254,6 +241,12 @@ const ensureUIInitialized = () => {
             <div id="sport-table-container"></div>
         `;
         
+        // Se l'attività salvata era 'influenza' o 'polline', resettala a 'escursione'
+        if (currentActivity === 'influenza' || currentActivity === 'polline') {
+            currentActivity = 'escursione';
+            localStorage.setItem(ACTIVITY_KEY, currentActivity); 
+        }
+
         // Aggiungi l'event listener per il cambio di attività
         const sportSelect = document.getElementById('sport-select');
         sportSelect.value = currentActivity; // Sincronizza con lo stato persistente
@@ -322,4 +315,5 @@ const initSportModule = async () => {
 };
 
 // Avvia il modulo sport quando il DOM è completamente caricato
+
 document.addEventListener('DOMContentLoaded', initSportModule);
