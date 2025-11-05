@@ -19,19 +19,19 @@ const getDressSuggestion = (temp) => {
 
     // Logica basata sulla Temperatura, max 6 parole per riga.
     if (t >= 30) {
-        return `☀️ **Caldo Estremo:**${br}Solo abiti traspiranti. Protezione solare obbligatoria.`;
+        return `☀️ Caldo Intenso:${br}Solo abiti traspiranti. Protezione solare obbligatoria.`;
     } else if (t >= 25) {
-        return `👕 **Caldo:**${br}T-shirt, pantaloncini. Vesti leggero.`;
+        return `👕 Caldo:${br}T-shirt, pantaloncini. Vesti leggero.`;
     } else if (t >= 20) {
-        return `👚 **Mite:**${br}Mezza manica. Giacca leggera sera.`;
+        return `👚 Mite:${br}Mezza manica. Giacca leggera sera.`;
     } else if (t >= 15) {
-        return `🧥 **Fresco:**${br}Strati leggeri, felpa o giacca.`;
+        return `🧥 Fresco:${br}Strati leggeri, felpa o giacca.`;
     } else if (t >= 10) {
-        return `🧣 **Freddo Moderato:**${br}Maglione pesante e giacca.`;
+        return `🧣 Freddo Moderato:${br}Maglione pesante e giacca.`;
     } else if (t >= 5) {
-        return `🧤 **Freddo:**${br}Cappotto, sciarpa, guanti.`;
+        return `🧤 Freddo:${br}Cappotto, sciarpa, guanti.`;
     } else {
-        return `🥶 **Freddo Intenso:**${br}Giacca invernale, strati termici.`;
+        return `🥶 Freddo Intenso:${br}Giacca invernale, strati termici.`;
     }
 };
 
