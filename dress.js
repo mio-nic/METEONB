@@ -1,3 +1,5 @@
+// dress.js - SOLO MODULO DI RENDERING DELLA TABELLA ABBIGLIAMENTO
+
 import { formatTime, getWeatherEmoji } from './main.js';
 
 /**
@@ -5,7 +7,6 @@ import { formatTime, getWeatherEmoji } from './main.js';
  * se non sono già presenti nel DOM.
  */
 const injectDressStyles = () => {
-    // Evita di iniettare gli stili più di una volta
     if (document.getElementById('dress-table-styles')) {
         return;
     }
@@ -19,17 +20,17 @@ const injectDressStyles = () => {
             --temp-high-color: #FFCDD2; /* Rosso chiaro */
         }
         
-        /* Stili per il wrapper scorrevole (CRUCIALE PER SCROLL OR.) */
+        /* Stili per il wrapper scorrevole (CRUCIALE PER SCROLL ORIZZONTALE) */
         .scrollable-table-wrapper {
             width: 100%;
-            overflow-x: auto;
+            overflow-x: auto; 
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Stili per la Tabella Oraria (Override o Aggiunte) */
+        /* Stili per la Tabella Oraria */
         .hourly-dress-table {
             table-layout: auto;
-            width: max-content; /* Permette alla tabella di espandersi orizzontalmente */
+            width: max-content; /* Permette alla tabella di espandersi */
             border-collapse: collapse;
             color: var(--text-color);
             font-size: 0.9em;
@@ -37,12 +38,11 @@ const injectDressStyles = () => {
             border-radius: 8px;
         }
 
-        /* Stili per colonna sticky (FONDAMENTALE per lo scroll orizzontale) */
+        /* Stili per colonna sticky */
         .sticky-col {
             position: sticky;
             left: 0;
             z-index: 5; 
-            /* Usa le variabili globali già definite in index.html */
             background-color: var(--table-row-odd-bg) !important; 
             border-right: 1px solid var(--border-color);
             font-weight: bold;
@@ -53,11 +53,9 @@ const injectDressStyles = () => {
             z-index: 6; 
         }
         .dress-suggestion-row .sticky-col {
-            /* Colore leggermente diverso per la riga suggerimento */
             background-color: rgba(66, 161, 255, 0.2) !important;
         }
         .dress-suggestion-row td {
-             /* Bordi sulla riga del suggerimento */
              border-top: 2px solid var(--primary-color);
         }
         
@@ -67,7 +65,6 @@ const injectDressStyles = () => {
             line-height: 1.2; 
             font-weight: 500;
         }
-        
     `;
     document.head.appendChild(style);
 };
@@ -75,7 +72,6 @@ const injectDressStyles = () => {
 
 /**
  * Determina il suggerimento di abbigliamento in base ai parametri meteo orari.
- * ... (Logica invariata)
  */
 const getClothingSuggestion = (temp, precip, wind) => {
     let suggestion = '';
@@ -117,7 +113,6 @@ const getClothingSuggestion = (temp, precip, wind) => {
         `<br/><span style="font-size: 0.75em; color: var(--secondary-text-color); font-weight: normal;">${accessories.join(' - ')}</span>` 
         : '';
         
-    // Uso della classe CSS definita sopra
     return `<div class="clothing-suggestion-box">${suggestion}</div>${accessoryStr}`;
 };
 
@@ -178,7 +173,6 @@ export const generateHourlyDressTable = (hourlyData) => {
                         Temperatura
                     </td>
                     ${hourlyForecasts.map(f => {
-                        // Usa le variabili CSS --temp-low-color e --temp-high-color
                         const tempStyle = f.temp < 10 ? 'color: var(--temp-low-color);' : f.temp > 25 ? 'color: var(--temp-high-color);' : ''; 
                         return `
                             <td style="font-size: 1.1em; font-weight: bold; ${tempStyle}">
@@ -212,7 +206,8 @@ export const generateHourlyDressTable = (hourlyData) => {
 
             </tbody>
         </table>
-    </div> `;
+    </div> 
+    `;
 
     return html;
 };
