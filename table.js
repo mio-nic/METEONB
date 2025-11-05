@@ -7,6 +7,7 @@ import { updateRainChart } from './gradi-precipitazioni.js';
 import { updateComfortTable } from './vita.js';
 import { updateSunTable } from './sun.js';
 import { updateSportTable } from './sport.js';
+import { updateDressTable } from './dress.js';
 
 // --- FUNZIONI DI UTILITÀ (Alert e Descrizione) ---
 
@@ -613,6 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateComfortTable(allData);
             updateSunTable(allData); 
             updateSportTable(allData);
+            updateDressTable(allData);
 
             // Ritorna al display del messaggio dopo il successo
             toggleSearchDisplay(false); 
@@ -705,3 +707,4 @@ document.addEventListener('DOMContentLoaded', () => {
     initData();
 
 });
+
