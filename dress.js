@@ -17,21 +17,21 @@ const getDressSuggestion = (temp) => {
         return "Dati non disponibili";
     }
 
-    // Logica basata sulla Temperatura con descrizioni ampliate e stacchi
+    // Logica basata sulla Temperatura, max 6 parole per riga.
     if (t >= 30) {
-        return `☀️ Molto Caldo:${br}Abbigliamento minimo e traspirante (canottiera, pantaloncini, vestiti leggeri). Indispensabile crema solare e cappello.`;
+        return `☀️ **Caldo Estremo:**${br}Solo abiti traspiranti. Protezione solare obbligatoria.`;
     } else if (t >= 25) {
-        return `👕 Caldo:${br}Abbigliamento estivo leggero (T-shirt, pantaloncini/gonna). Evita fibre sintetiche e vesti con colori chiari.`;
+        return `👕 **Caldo:**${br}T-shirt, pantaloncini. Vesti leggero.`;
     } else if (t >= 20) {
-        return `👚 Clima Mite:${br}Mezza manica o camicia leggera. Utile un maglioncino sottile per la sera o zone d'ombra.`;
+        return `👚 **Mite:**${br}Mezza manica. Giacca leggera sera.`;
     } else if (t >= 15) {
-        return `🧥 Fresco:${br}T-shirt con giacca leggera o felpa (strati leggeri). Ideale per quando la temperatura può oscillare.`;
+        return `🧥 **Fresco:**${br}Strati leggeri, felpa o giacca.`;
     } else if (t >= 10) {
-        return `🧣 Moderatamente Freddo:${br}Maglione o felpa pesante e giacca a vento. Consigliati pantaloni lunghi.`;
+        return `🧣 **Freddo Moderato:**${br}Maglione pesante e giacca.`;
     } else if (t >= 5) {
-        return `🧤 Freddo:${br}Cappotto medio/pesante, sciarpa e maglione caldo. È il momento di aggiungere strati termici.`;
+        return `🧤 **Freddo:**${br}Cappotto, sciarpa, guanti.`;
     } else {
-        return `🥶 Freddo Intenso:${br}Giacca invernale pesante, cappello, guanti e sciarpa. Necessari strati termici e calzature adatte.`;
+        return `🥶 **Freddo Intenso:**${br}Giacca invernale, strati termici.`;
     }
 };
 
