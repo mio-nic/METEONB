@@ -941,17 +941,20 @@ tr:hover {
 
 
 	/*abbigliamento*/
-	/* Stile per permettere lo scorrimento laterale della tabella */
+	/* abbigliamento */
+/* Stile per permettere lo scorrimento laterale della tabella */
 .table-scroll-container {
-    overflow-x: auto; /* Abilita lo scorrimento orizzontale */
-    width: 100%;
+    overflow-x: auto; /* Mantiene lo scorrimento orizzontale */
+    width: 100%; /* Si adatta alla larghezza dello schermo/contenitore */
     margin-bottom: 20px;
 }
 
 /* Stile base per la tabella */
 .hourly-dress-table.transposed-table {
-    width: auto; /* Permette alla tabella di essere più larga del contenitore */
-    min-width: 100%; /* Assicura che riempia almeno il 100% se i dati sono pochi */
+    /* Rimosso width: auto; per evitare che la tabella si estenda troppo quando non necessario. 
+       min-width gestisce la dimensione minima */
+    min-width: 500px; /* Imposta una larghezza minima sufficiente per lo scrolling, 
+                        ma la dimensione è gestita dal numero di colonne. */
     border-collapse: collapse;
     margin-top: 15px;
     font-size: 0.95em;
@@ -965,19 +968,19 @@ tr:hover {
     padding: 10px 15px;
     text-align: center;
     border: 1px solid #ddd;
-    white-space: nowrap; /* Impedisce che il contenuto della cella vada a capo */
+    white-space: nowrap; /* Mantenuto: impedisce che le ore vadano a capo */
 }
 
-/* Colonna di intestazione a sinistra (Ora, Temperatura, Abbigliamento) */
+/* 🛑 CORREZIONE CHIAVE: Colonna di intestazione fissa a sinistra */
 .transposed-table th.header-col {
-    background-color: #34495e;
+    background-color: #34495e; /* FONDAMENTALE: Forza lo sfondo per evitare effetto "bianco" */
     color: white;
     text-align: left;
-    min-width: 120px; /* Larghezza fissa per l'etichetta */
+    min-width: 120px;
     font-weight: bold;
-    position: sticky; /* Rende la colonna di intestazione fissa */
+    position: sticky; 
     left: 0;
-    z-index: 10;
+    z-index: 20; /* Aumenta lo z-index per assicurare che sia sopra le altre celle in scroll */
 }
 
 /* Stile per l'intestazione superiore (le ore) */
@@ -985,6 +988,13 @@ tr:hover {
     background-color: #2c3e50;
     color: white;
     font-weight: 600;
+}
+
+/* Stile per la cella d'angolo (Ora:) per assicurare che sia fissa */
+.transposed-table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 21; /* Deve essere il più alto */
 }
 
 /* Stile specifico per i dati di temperatura */
