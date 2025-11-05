@@ -1,12 +1,74 @@
 import { formatTime, getWeatherEmoji } from './main.js';
 
 /**
+ * Inietta gli stili CSS specifici per la tabella dell'abbigliamento
+ * se non sono già presenti nel DOM.
+ */
+const injectDressStyles = () => {
+    // Evita di iniettare gli stili più di una volta
+    if (document.getElementById('dress-table-styles')) {
+        return;
+    }
+
+    const style = document.createElement('style');
+    style.id = 'dress-table-styles';
+    style.innerHTML = `
+        /* Variabili di colore specifiche per la temperatura */
+        :root {
+            --temp-low-color: #90CAF9; /* Blu chiaro */
+            --temp-high-color: #FFCDD2; /* Rosso chiaro */
+        }
+        
+        /* Stili per la Tabella Oraria (Override o Aggiunte) */
+        .hourly-dress-table {
+            table-layout: auto;
+            width: 100%;
+            border-collapse: collapse;
+            color: var(--text-color);
+            font-size: 0.9em;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        /* Stili per colonna sticky (FONDAMENTALE per lo scroll orizzontale) */
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            z-index: 5; 
+            /* Usa le variabili globali già definite in index.html */
+            background-color: var(--table-row-odd-bg) !important; 
+            border-right: 1px solid var(--border-color);
+            font-weight: bold;
+            text-align: left !important;
+        }
+        .hourly-dress-table thead th:first-child {
+            background-color: var(--table-header-bg) !important;
+            z-index: 6; 
+        }
+        .dress-suggestion-row .sticky-col {
+            /* Colore leggermente diverso per la riga suggerimento */
+            background-color: rgba(66, 161, 255, 0.2) !important;
+        }
+        .dress-suggestion-row td {
+             /* Bordi sulla riga del suggerimento */
+             border-top: 2px solid var(--primary-color);
+        }
+        
+        /* Stili per il suggerimento di testo */
+        .clothing-suggestion-box {
+            padding: 4px; 
+            line-height: 1.2; 
+            font-weight: 500;
+        }
+        
+    `;
+    document.head.appendChild(style);
+};
+
+
+/**
  * Determina il suggerimento di abbigliamento in base ai parametri meteo orari.
- * Logica: Più dettagliato con l'abbigliamento base + accessori in base a pioggia/vento.
- * @param {number} temp - Temperatura in °C.
- * @param {number} precip - Precipitazione oraria in mm.
- * @param {number} wind - Velocità del vento in km/h.
- * @returns {string} Suggerimento di abbigliamento in formato HTML.
+ * ... (Logica invariata)
  */
 const getClothingSuggestion = (temp, precip, wind) => {
     let suggestion = '';
@@ -33,22 +95,23 @@ const getClothingSuggestion = (temp, precip, wind) => {
     }
 
     // 2. Logica per vento e pioggia (Accessori Aggiuntivi)
-    if (precip >= 1.5) { // Pioggia da moderata a forte
+    if (precip >= 1.5) { 
         accessories.push('Impermeabile e Ombrello ☔');
-    } else if (precip > 0.1) { // Pioggia leggera
+    } else if (precip > 0.1) {
         accessories.push('Giacca idrorepellente');
     }
 
-    if (wind > 35 && temp < 20) { // Vento forte con temperature fresche
+    if (wind > 35 && temp < 20) {
         accessories.push('Antivento Aggiuntivo');
     }
 
-    // 3. Combinazione del risultato in un formato pulito
+    // 3. Combinazione del risultato
     const accessoryStr = accessories.length > 0 ? 
         `<br/><span style="font-size: 0.75em; color: var(--secondary-text-color); font-weight: normal;">${accessories.join(' - ')}</span>` 
         : '';
         
-    return `<div style="padding: 4px; line-height: 1.2; font-weight: 500;">${suggestion}</div>${accessoryStr}`;
+    // Uso della classe CSS definita sopra
+    return `<div class="clothing-suggestion-box">${suggestion}</div>${accessoryStr}`;
 };
 
 
@@ -58,12 +121,14 @@ const getClothingSuggestion = (temp, precip, wind) => {
  * @returns {string} Il markup HTML della tabella.
  */
 export const generateHourlyDressTable = (hourlyData) => {
+    // 1. Inietta gli stili all'avvio della funzione
+    injectDressStyles(); 
+    
     if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0) {
         return '<p style="color: red;">Dati orari non disponibili.</p>';
     }
 
     const now = new Date();
-    // Trova l'indice dell'ora corrente o della prossima ora disponibile
     const startIndex = hourlyData.time.findIndex(timeStr => new Date(timeStr) >= now);
 
     if (startIndex === -1) {
@@ -84,17 +149,17 @@ export const generateHourlyDressTable = (hourlyData) => {
         });
     }
 
-    // Costruzione della tabella (Utilizzando le classi CSS fornite nell'HTML)
+    // Costruzione della tabella 
     let html = `
     <div class="table-container">
         <table class="hourly-dress-table">
             <thead>
                 <tr>
-                    <th class="sticky-col" style="min-width: 100px; text-align: left;">
+                    <th class="sticky-col" style="min-width: 100px;">
                         Dettaglio
                     </th>
                     ${hourlyForecasts.map(f => `
-                        <th style="min-width: 60px; text-align: center;">
+                        <th style="min-width: 60px;">
                             ${formatTime(f.time).substring(0, 5)}
                         </th>
                     `).join('')}
@@ -103,10 +168,11 @@ export const generateHourlyDressTable = (hourlyData) => {
             <tbody>
                 
                 <tr> 
-                    <td class="sticky-col" style="text-align: left; font-weight: 500;">
+                    <td class="sticky-col">
                         Temperatura
                     </td>
                     ${hourlyForecasts.map(f => {
+                        // Usa le variabili CSS --temp-low-color e --temp-high-color
                         const tempStyle = f.temp < 10 ? 'color: var(--temp-low-color);' : f.temp > 25 ? 'color: var(--temp-high-color);' : ''; 
                         return `
                             <td style="font-size: 1.1em; font-weight: bold; ${tempStyle}">
@@ -117,7 +183,7 @@ export const generateHourlyDressTable = (hourlyData) => {
                 </tr>
                 
                 <tr class="weather-row">
-                    <td class="sticky-col" style="text-align: left; font-weight: 500;">
+                    <td class="sticky-col">
                         Meteo
                     </td>
                     ${hourlyForecasts.map(f => `
@@ -127,8 +193,8 @@ export const generateHourlyDressTable = (hourlyData) => {
                     `).join('')}
                 </tr>
                 
-                <tr class="dress-suggestion-row" style="border-top: 2px solid var(--primary-color);">
-                    <td class="sticky-col" style="text-align: left; font-weight: bold; color: var(--primary-color);">
+                <tr class="dress-suggestion-row">
+                    <td class="sticky-col" style="font-weight: bold; color: var(--primary-color);">
                         ABBIGLIAMENTO
                     </td>
                     ${hourlyForecasts.map(f => `
@@ -145,6 +211,3 @@ export const generateHourlyDressTable = (hourlyData) => {
 
     return html;
 };
-
-// Rimuovo l'export default e lascio solo l'export con nome per compatibilità con table.js
-// export { getClothingSuggestion }; // Mantenuta per debug se volessi
