@@ -15,21 +15,21 @@ const getDressSuggestion = (temp) => {
         return "N/D";
     }
 
-    // Logica basata sulla Temperatura
+   // Logica basata sulla Temperatura con descrizioni ampliate
     if (t >= 30) {
-        return "☀️ Leggerissimo";
+        return "☀️ **Molto Caldo:** Abbigliamento minimo e traspirante (canottiera, pantaloncini, vestiti leggeri). Indispensabile crema solare e cappello.";
     } else if (t >= 25) {
-        return "👕 Leggero";
+        return "👕 **Caldo:** Abbigliamento estivo leggero (T-shirt, pantaloncini/gonna). Evita fibre sintetiche e vesti con colori chiari.";
     } else if (t >= 20) {
-        return "👚 Mezza manica";
+        return "👚 **Clima Mite:** Mezza manica o camicia leggera. Utile un maglioncino sottile per la sera o zone d'ombra.";
     } else if (t >= 15) {
-        return "🧥 Strati leggeri";
+        return "🧥 **Fresco:** T-shirt con giacca leggera o felpa (strati leggeri). Ideale per quando la temperatura può oscillare.";
     } else if (t >= 10) {
-        return "🧣 Giacca media";
+        return "🧣 **Moderatamente Freddo:** Maglione o felpa pesante e giacca a vento. Consigliati pantaloni lunghi.";
     } else if (t >= 5) {
-        return "🧤 Cappotto";
+        return "🧤 **Freddo:** Cappotto medio/pesante, sciarpa e maglione caldo. È il momento di aggiungere strati termici.";
     } else {
-        return "🥶 Invernale";
+        return "🥶 **Freddo Intenso:** Giacca invernale pesante, cappello, guanti e sciarpa. Necessari strati termici e calzature adatte.";
     }
 };
 
