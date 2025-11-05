@@ -2,7 +2,7 @@
   "name": "METEONB",
   "short_name": "NB",
   "description": "Previsioni meteo in tempo reale e radar per la tua zona.", 
-  "start_url": "/METEONB/start.html",
+  "start_url": "/METEONB/index.html",
   "display": "standalone",
   "lang": "it", 
   "background_color": "#000000",
