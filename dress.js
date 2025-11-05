@@ -3,14 +3,15 @@
 
 /**
  * Funzione di utilità per fornire raccomandazioni dettagliate sull'abbigliamento
- * basate sulla temperatura, con interruzioni di riga per una migliore leggibilità.
+ * basate sulla temperatura, con interruzioni di riga (<br>) per separare le sezioni.
  *
- * @param {number} temp - Temperatura in Celsius.
+ * @param {number} temp - Temperatura in Celsius (solo temperature_2m).
  * @returns {string} Suggerimento di abbigliamento dettagliato formattato con <br>.
  */
 const getDressSuggestion = (temp) => {
     const t = Number(temp);
-    const br = '<br><br><br>'; // Stringa contenente tre <br>
+    // Usiamo due <br> per uno stacco visivo pulito
+    const br = '<br><br>'; 
 
     if (isNaN(t)) {
         return "Dati non disponibili";
@@ -18,19 +19,19 @@ const getDressSuggestion = (temp) => {
 
     // Logica basata sulla Temperatura con descrizioni ampliate e stacchi
     if (t >= 30) {
-        return `☀️ **Molto Caldo:**${br}Abbigliamento minimo e traspirante (canottiera, pantaloncini, vestiti leggeri). Indispensabile crema solare e cappello.`;
+        return `☀️ Molto Caldo:${br}Abbigliamento minimo e traspirante (canottiera, pantaloncini, vestiti leggeri). Indispensabile crema solare e cappello.`;
     } else if (t >= 25) {
-        return `👕 **Caldo:**${br}Abbigliamento estivo leggero (T-shirt, pantaloncini/gonna). Evita fibre sintetiche e vesti con colori chiari.`;
+        return `👕 Caldo:${br}Abbigliamento estivo leggero (T-shirt, pantaloncini/gonna). Evita fibre sintetiche e vesti con colori chiari.`;
     } else if (t >= 20) {
-        return `👚 **Clima Mite:**${br}Mezza manica o camicia leggera. Utile un maglioncino sottile per la sera o zone d'ombra.`;
+        return `👚 Clima Mite:${br}Mezza manica o camicia leggera. Utile un maglioncino sottile per la sera o zone d'ombra.`;
     } else if (t >= 15) {
-        return `🧥 **Fresco:**${br}T-shirt con giacca leggera o felpa (strati leggeri). Ideale per quando la temperatura può oscillare.`;
+        return `🧥 Fresco:${br}T-shirt con giacca leggera o felpa (strati leggeri). Ideale per quando la temperatura può oscillare.`;
     } else if (t >= 10) {
-        return `🧣 **Moderatamente Freddo:**${br}Maglione o felpa pesante e giacca a vento. Consigliati pantaloni lunghi.`;
+        return `🧣 Moderatamente Freddo:${br}Maglione o felpa pesante e giacca a vento. Consigliati pantaloni lunghi.`;
     } else if (t >= 5) {
-        return `🧤 **Freddo:**${br}Cappotto medio/pesante, sciarpa e maglione caldo. È il momento di aggiungere strati termici.`;
+        return `🧤 Freddo:${br}Cappotto medio/pesante, sciarpa e maglione caldo. È il momento di aggiungere strati termici.`;
     } else {
-        return `🥶 **Freddo Intenso:**${br}Giacca invernale pesante, cappello, guanti e sciarpa. Necessari strati termici e calzature adatte.`;
+        return `🥶 Freddo Intenso:${br}Giacca invernale pesante, cappello, guanti e sciarpa. Necessari strati termici e calzature adatte.`;
     }
 };
 
@@ -47,12 +48,13 @@ export const generateHourlyDressTable = (allData) => {
         return;
     }
     
+    // Cancella l'eventuale messaggio di "Caricamento dati..."
     container.innerHTML = ''; 
 
     const hourlyData = allData?.hourly;
 
     if (!hourlyData || !hourlyData.time || !hourlyData.temperature_2m || hourlyData.time.length === 0) {
-        container.innerHTML = '<p>Dati orari essenziali (tempo/temperatura) non disponibili per l\'abbigliamento.</p>';
+        container.innerHTML = '<p>Dati orari essenziali non disponibili per l\'abbigliamento.</p>';
         return;
     }
 
@@ -93,8 +95,8 @@ export const generateHourlyDressTable = (allData) => {
                         ${temperatures.map(t => `<td class="temp-data">${t}</td>`).join('')}
                     </tr>
                     <tr>
-                        <th class="header-col">Abbigliamento:</th>
-                        ${suggestions.map(s => `<td>${s}</td>`).join('')}
+                        <th class="header-col"></th> 
+                        ${suggestions.map(s => `<td class="suggestion-data">${s}</td>`).join('')}
                     </tr>
                 </tbody>
             </table>
