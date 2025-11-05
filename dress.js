@@ -85,17 +85,17 @@ export const generateHourlyDressTable = (allData) => {
             <table class="hourly-dress-table transposed-table">
                 <thead>
                     <tr>
-                        <th class="header-col">Ora:</th>
+                        
                         ${hours.map(h => `<th>${h}</th>`).join('')}
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <th class="header-col">Temperatura:</th>
+                        
                         ${temperatures.map(t => `<td class="temp-data">${t}</td>`).join('')}
                     </tr>
                     <tr>
-                        <th class="header-col"></th> 
+                        
                         ${suggestions.map(s => `<td class="suggestion-data">${s}</td>`).join('')}
                     </tr>
                 </tbody>
