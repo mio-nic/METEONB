@@ -1,40 +1,37 @@
 // dress.js
-// Logica per l'abbigliamento e il rendering della tabella oraria trasposta.
-
 /**
  * Funzione di utilità per fornire raccomandazioni ultra-brevi sull'abbigliamento
- * basate sulla temperatura.
+ * basate sulla temperatura, utilizzando simboli neutri e spaziatura aggiuntiva.
  *
- * @param {number} temp - Temperatura in Celsius (solo temperature_2m).
+ * @param {number} temp - Temperatura in Celsius.
  * @returns {string} Suggerimento di abbigliamento dettagliato formattato con <br><br>.
  */
 const getDressSuggestion = (temp) => {
     const t = Number(temp);
-    // Usiamo due <br> per uno stacco visivo pulito
-    const br = '<br><br>'; 
+    const semibr = '<br>'; // Usato per separare il simbolo dal testo
+    const br = '<br><br>'; // Usato per separare il titolo dalla descrizione
 
     if (isNaN(t)) {
         return "Dati non disponibili";
     }
 
-    // Logica basata sulla Temperatura, max 6 parole per riga.
+    // Logica basata sulla Temperatura, con simbolo e spaziatura aggiunta.
     if (t >= 30) {
-        return `☀️ **Caldo Estremo:**${br}Solo abiti traspiranti. Protezione solare obbligatoria.`;
+        return `🔆${semibr}Caldo Estremo:${br}Solo abiti traspiranti. Protezione solare obbligatoria.`;
     } else if (t >= 25) {
-        return `👕 **Caldo:**${br}T-shirt, pantaloncini. Vesti leggero.`;
+        return `👕${semibr}Caldo:${br}T-shirt, pantaloncini. Vesti leggero.`;
     } else if (t >= 20) {
-        return `👚 **Mite:**${br}Mezza manica. Giacca leggera sera.`;
+        return `👚${semibr}Mite:${br}Mezza manica. Giacca leggera sera.`;
     } else if (t >= 15) {
-        return `🧥 **Fresco:**${br}Strati leggeri, felpa o giacca.`;
+        return `🧥${semibr}Fresco:${br}Strati leggeri, felpa o giacca.`;
     } else if (t >= 10) {
-        return `🧣 **Freddo Moderato:**${br}Maglione pesante e giacca.`;
+        return `🧣${semibr}Freddo Moderato:${br}Maglione pesante e giacca.`;
     } else if (t >= 5) {
-        return `🧤 **Freddo:**${br}Cappotto, sciarpa, guanti.`;
+        return `🧤${semibr}Freddo:${br}Cappotto, sciarpa, guanti.`;
     } else {
-        return `🥶 **Freddo Intenso:**${br}Giacca invernale, strati termici.`;
+        return `❄️${semibr}Freddo Intenso:${br}Giacca invernale, strati termici.`;
     }
 };
-
 /**
  * Aggiorna il contenitore dell'abbigliamento con una tabella oraria trioraria trasposta.
  *
