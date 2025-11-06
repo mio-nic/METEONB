@@ -24,7 +24,7 @@ const getWeatherAlertStatus = (weatherCode, temp, precipitation, windSpeed, isDa
         alertLevel = 3; // Rosso
     } else if (w >= 30 || p >= (isDaily ? 30 : 10) || t <= -1) {
         alertLevel = 2; // Arancione
-    } else if (w >= 20 || p >= (isDaily ? 20 : 5) || t < 5) {
+    } else if (w >= 20 || p >= (isDaily ? 20 : 5) || t <= 5) {
         alertLevel = 1; // Giallo
     }
 
@@ -73,7 +73,7 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
 
     // Allerta Gialla (Rischio Basso)
     if (statusClass === 'dot-buono') {
-        if (t < 5 && t > -1) risks.push('freddo (temperatura <5°C)');
+        if (t <= 5 && t > -1) risks.push('freddo (temperatura <5°C)');
         if (w >= 20) risks.push('raffiche di vento (>20km/h)');
         if (p >= 20) risks.push('piogge isolate (>20mm)');
         if (risks.length > 0) return `Rischio Moderato di ${risks.join(', ')}`;
@@ -276,8 +276,9 @@ const getAlertStyles = (alertColor) => {
 };
 
 // ... (Resto delle funzioni di utilità omesso per brevità) ...
-const getCurrentWeatherDescriptionFromData = (precipitation, cloudCover, windSpeed, precipProb) => {
+const getCurrentWeatherDescriptionFromData = (precipitation, cloudCover, windSpeed, precipProb, temperature_2m) => {
     if (precipProb >= 70 && windSpeed >= 30) { return "temporale"; }
+    if (precipitation >= 0.1 && temperature_2m < 2) { return "neve"; }
     if (precipitation >= 5.0) { return "pioggia forte"; }
     if (precipitation >= 2.0) { return "pioggia"; }
     if (precipitation >= 0.1) { return "pioviggina"; }
@@ -342,7 +343,7 @@ const renderCurrentWeatherCard = (allData, currentTimeIndex) => {
     const currentPrecipitation = Number(getHourlyValue('precipitation', currentTimeIndex));
     const currentPrecipitationProb = Math.round(Number(getHourlyValue('precipitation_probability', currentTimeIndex)));
 
-    const currentWeatherDescription = getCurrentWeatherDescriptionFromData(currentPrecipitation, currentCloudCover, currentWindSpeed, currentPrecipitationProb);
+    const currentWeatherDescription = getCurrentWeatherDescriptionFromData(currentPrecipitation, currentCloudCover, currentWindSpeed, currentPrecipitationProb, currentTemp);
     const weatherEmojiNow = currentTimeIndex !== -1 ? getWeatherEmoji(hourlyData, currentTimeIndex) : "❓";
 
     const getMaxMin = (dataArray, index) => {
@@ -707,5 +708,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initData();
 
 });
+
 
 
