@@ -79,8 +79,8 @@ export const generateHourlyDressTable = (allData) => {
     }
 
     if (startIndex === -1) {
-         container.innerHTML = '<p>Dati orari per l\'ora attuale non trovati.</p>';
-         return;
+          container.innerHTML = '<p>Dati orari per l\'ora attuale non trovati.</p>';
+          return;
     }
     
     // 3. Itera per selezionare i 7 blocchi di dati triorari
@@ -112,24 +112,25 @@ export const generateHourlyDressTable = (allData) => {
     }
 
 
-    // 4. Costruzione della tabella TRASPOSTA (come richiesto, con intestazione riga abbigliamento rimossa)
+    // 4. Costruzione della tabella TRASPOSTA
+    // Aggiungiamo un <th> per l'intestazione di riga in thead
     let tableHtml = `
         <h3 class="section-title">Consigli Orari Abbigliamento (Ogni ${intervalHours} Ore)</h3>
         <div class="table-scroll-container">
             <table class="hourly-dress-table transposed-table">
                 <thead>
                     <tr>
-                         
+                        <th class="header-col">Ora:</th>
                         ${hours.map(h => `<th>${h}</th>`).join('')}
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        
+                        <th class="header-col">Temp.</th>
                         ${temperatures.map(t => `<td class="temp-data">${t}</td>`).join('')}
                     </tr>
                     <tr>
-                        
+                        <th class="header-col">Abbigliamento</th>
                         ${suggestions.map(s => `<td class="suggestion-data">${s}</td>`).join('')}
                     </tr>
                 </tbody>
