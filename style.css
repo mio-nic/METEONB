@@ -1008,25 +1008,5 @@ tr:hover {
     background-color: #f4f6f9;
 }
 
-* MEDIA QUERY: Regole specifiche per dispositivi mobili
- * Forza lo sfondo e la larghezza per risolvere il problema del "bianco"
- */
-@media (max-width: 600px) {
-    
-    /* 1. Forza lo sfondo della colonna di intestazione (Temperatura, Abbigliamento vuoto) */
-    .transposed-table th.header-col {
-        background-color: #34495e !important; /* Uso !important per sovrascrivere qualsiasi altra regola */
-        color: white;
-    }
 
-    /* 2. Forza lo sfondo della cella d'angolo (Ora) */
-    .transposed-table thead th:first-child {
-        background-color: #2c3e50 !important;
-    }
-    
-    /* 3. Assicura che la tabella interna abbia abbastanza larghezza per forzare lo scrolling */
-    .hourly-dress-table.transposed-table {
-        /* Rendi la larghezza minima scalabile in base al numero di colonne */
-        min-width: 700px; 
-    }
-}
+
