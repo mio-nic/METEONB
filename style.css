@@ -952,7 +952,7 @@ tr:hover {
 /* Stile base per la tabella */
 .hourly-dress-table.transposed-table {
     /* Rimosso width: auto; per evitare che la tabella si estenda troppo quando non necessario. 
-       min-width gestisce la dimensione minima */
+        min-width gestisce la dimensione minima */
     min-width: 500px; /* Imposta una larghezza minima sufficiente per lo scrolling, 
                         ma la dimensione è gestita dal numero di colonne. */
     border-collapse: collapse;
