@@ -937,76 +937,7 @@ tr:hover {
         min-width: 500px; /* Assicura che la tabella non si rompa troppo su mobile */
     }
 
-    #
+   
 
 
-	/*abbigliamento*/
-	/* abbigliamento */
-/* Stile per permettere lo scorrimento laterale della tabella */
-.table-scroll-container {
-    overflow-x: auto; /* Mantiene lo scorrimento orizzontale */
-    width: 100%; /* Si adatta alla larghezza dello schermo/contenitore */
-    margin-bottom: 20px;
-}
-
-/* Stile base per la tabella */
-.hourly-dress-table.transposed-table {
-    /* Rimosso width: auto; per evitare che la tabella si estenda troppo quando non necessario. 
-        min-width gestisce la dimensione minima */
-    min-width: 500px; /* Imposta una larghezza minima sufficiente per lo scrolling, 
-                        ma la dimensione è gestita dal numero di colonne. */
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 0.95em;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-}
-
-/* Stile per intestazioni e celle (uniforme) */
-.transposed-table th, 
-.transposed-table td {
-    padding: 10px 15px;
-    text-align: center;
-    border: 1px solid #ddd;
-    white-space: nowrap; /* Mantenuto: impedisce che le ore vadano a capo */
-}
-
-/* 🛑 CORREZIONE CHIAVE: Colonna di intestazione fissa a sinistra */
-.transposed-table th.header-col {
-    background-color: #34495e; /* FONDAMENTALE: Forza lo sfondo per evitare effetto "bianco" */
-    color: white;
-    text-align: left;
-    min-width: 120px;
-    font-weight: bold;
-    position: sticky; 
-    left: 0;
-    z-index: 20; /* Aumenta lo z-index per assicurare che sia sopra le altre celle in scroll */
-}
-
-/* Stile per l'intestazione superiore (le ore) */
-.transposed-table thead th {
-    background-color: #2c3e50;
-    color: white;
-    font-weight: 600;
-}
-
-/* Stile per la cella d'angolo (Ora:) per assicurare che sia fissa */
-.transposed-table thead th:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 21; /* Deve essere il più alto */
-}
-
-/* Stile specifico per i dati di temperatura */
-.transposed-table .temp-data {
-    font-weight: bold;
-    color: #e74c3c; 
-}
-
-/* Stile per le righe (per distinguere meglio) */
-.transposed-table tbody tr:nth-child(even) {
-    background-color: #f4f6f9;
-}
-
-
-
+	
