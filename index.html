@@ -26,8 +26,8 @@
       <button id="closeSidebar" class="close-btn">&times;</button>
     </div>
     <a href="/METEONB/index.html" class="nav-link active"><i class="fas fa-home"></i> Home</a>
-    <a href="/METEONB/notizie/notizie.html" class="nav-link"><i class="fas fa-database"></i> Notizie</a>
-    <a href="/METEONB/pre/pre.html" class="nav-link"><i class="fas fa-satellite-dish"></i> Stazione</a>
+    <a href="/METEONB/notizie/notizie.php" class="nav-link"><i class="fas fa-database"></i> Notizie</a>
+    <a href="/METEONB/pre/pre.php" class="nav-link"><i class="fas fa-satellite-dish"></i> Stazione</a>
 
     <div class="sidebar-divider"></div>
     <span class="sidebar-footer">Versione: <span id="appVersion">1.0.0</span></span>
@@ -96,10 +96,11 @@
         <tbody id="sunTableBody"></tbody>
       </table>
       <p id="offsetMessage"></p>
-      <div style="height:12px"></div>
+      </div>
+      
       <h3>ATTIVITÀ E SPORT</h3>
       <div class="container" id="app"></div>
-    </div>
+    
 
 
     <div style="height:12px"></div>
@@ -113,14 +114,7 @@
   <script src="https://code.highcharts.com/modules/accessibility.js"></script>
   <script src="https://code.highcharts.com/highcharts-more.js"></script>     
 
-  <!-- Versione script -->
-  <script>
-    const APP_VERSION = '1.0.0';
-    document.getElementById('appVersion').textContent = APP_VERSION;
-  </script>
-
-  <!-- Script locali -->
-  
+    
 <script type="module" src="./main.js"></script>
 <script type="module" src="./gradi.js"></script>
 <script type="module" src="./table.js"></script>
@@ -132,28 +126,5 @@
 <script type="module" src="./dress.js"></script>
 </body>
   </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
