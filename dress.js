@@ -1,299 +1,183 @@
-// dress.js
+// dress.js - Versione Finale Sincronizzata Icone Giorno/Notte
 
-// --- COPIE DI FUNZIONI E COSTANTI DA main.js PER LA GESTIONE DELLE ICONE ---
+// --- CONFIGURAZIONE GLOBALE (Lasciare come 0) ---
+// L'offset non è più manuale; viene calcolato automaticamente in base ai fusi orari.
+// --------------------------------------------------
+
+// --- DIPENDENZE E COSTANTI ---
 const ICON_BASE_URL = "https://meteofree.altervista.org/METEONB/ICONE/";
+const ONE_HOUR_MS = 3600000;
 
+// Funzioni di Supporto (Invariate)
 const createIconTag = (iconNumber, altText = 'Icona Meteo') => {
-    // Dimensioni a 36x36px
     return `<img src="${ICON_BASE_URL}${iconNumber}.png" alt="${altText}" style="width: 36px; height: 36px; vertical-align: middle;" />`;
 };
 
 const getIconNumberFromData = (precipitation, cloudCover, windSpeed, precipProb, temperature_2m) => {
-    // 0. NEVE (Icona 13) - NEVE
-    if (precipitation >= 0.1 && temperature_2m < 1) {
-        return 13; 
-    }
-    
-    // 1. TEMPORALE (Icona 8) - Alta probabilità di pioggia + vento forte
-    if (precipProb >= 70 && windSpeed >= 30) {
-        return 8; 
-    }
-    
-    // 2. PIOGGIA FORTE (Icona 7) - Precipitazioni >= 5 mm
-    if (precipitation >= 5.0) {
-        return 7;
-    }
-
-    // 3. PIOGGIA MODERATA (Icona 6) - Precipitazioni tra 0.5 mm e 5 mm
-    if (precipitation >= 0.5) {
-        return 6;
-    }
-
-    // 4. PIOGGIA LEGGERA (Icona 5) - Precipitazioni tra 0.1 mm e 0.5 mm
-    if (precipitation >= 0.1) {
-        return 5;
-    }
-    
-    // Se non c'è pioggia significativa (preciptation < 0.1 mm), controlla le nuvole
-    
-    // 5. COPERTO (Icona 4) - Copertura nuvolosa alta
-    if (cloudCover >= 80) {
-        return 4;
-    }
-    
-    // 6. NUVOLOSO (Icona 3) - Copertura nuvolosa media
-    if (cloudCover >= 50) {
-        return 3;
-    }
-    
-    // 7. PREVALENTEMENTE SERENO (Icona 2) - Copertura nuvolosa bassa
-    if (cloudCover >= 20) {
-        return 2;
-    }
-
-    // 8. SERENO (Icona 1) - Copertura nuvolosa minima
+    if (precipitation >= 0.1 && temperature_2m < 1) { return 13; }
+    if (precipProb >= 70 && windSpeed >= 30) { return 8; }
+    if (precipitation >= 5.0) { return 7; }
+    if (precipitation >= 0.5) { return 6; }
+    if (precipitation >= 0.1) { return 5; }
+    if (cloudCover >= 80) { return 4; }
+    if (cloudCover >= 50) { return 3; }
+    if (cloudCover >= 20) { return 2; }
     return 1;
 };
 
-const getHourlyWeatherIcon = (data, index) => {
-    // Assicurati che i dati necessari per la nuova logica siano estratti:
-    const { precipitation, cloud_cover, wind_speed_10m, precipitation_probability, temperature_2m, time } = data;
+/**
+ * Calcola l'icona del tempo oraria, basandosi sull'ora numerica passata.
+ *
+ * @param {object} data - Dati orari completi dall'API.
+ * @param {number} index - Indice dell'ora corrente.
+ * @param {number} numericHour - L'ora numerica (0-23) della colonna della tabella. ⭐ MODIFICATO
+ * @returns {string} Tag HTML dell'icona.
+ */
+const getHourlyWeatherIcon = (data, index, numericHour) => {
+    const { precipitation, cloud_cover, wind_speed_10m, precipitation_probability, temperature_2m } = data;
+    const iconNumber = getIconNumberFromData(precipitation[index], cloud_cover[index], wind_speed_10m[index], precipitation_probability[index], temperature_2m[index]);
     
-    // Calcola il numero base dell'icona usando la nuova logica
-    const iconNumber = getIconNumberFromData(
-        precipitation[index], 
-        cloud_cover[index], 
-        wind_speed_10m[index], 
-        precipitation_probability[index],
-        temperature_2m[index]
-    );
+    // ⭐ USO DI numericHour GIA' PASSATO E RICONOSCIUTO NELLA COLONNA
+    const isNight = numericHour >= 18 || numericHour < 6;
     
-    const date = new Date(time[index]);
-    const hour = date.getHours();
-    
-    // Controlla se l'ora è NOTTURNA (tra le 18:00 inclusa e le 6:00 esclusa)
-    const isNight = hour >= 18 || hour < 6;
-    
-    // Gestione Notte: Solo se l'icona base è Sereno (1), Prev. Sereno (2) o Nuvoloso (3)
+    // Applica l'icona notturna (9) solo se l'icona originale è soleggiata/parzialmente nuvolosa (1, 2, 3)
     if (isNight && iconNumber <= 3) {
-        // Notte: Usa sempre l'icona 9 (Luna)
         return createIconTag(9, 'Meteo Notturno');
     }
     
-    // Per tutti gli altri codici (pioggia, neve, temporale, o giorno), usa l'icona determinata
     return createIconTag(iconNumber, 'Meteo Diurno/Precipitazioni');
 };
-// --- FINE COPIE DI FUNZIONI main.js ---
 
+const getDressSuggestion = (temp) => {
+    const t = Number(temp);
+    if (t >= 30) { return `Costume`; } else if (t >= 25) { return `T-shirt`; } else if (t >= 20) { return `Maglietta`; } else if (t >= 15) { return `Felpa`; } else if (t >= 10) { return `Giacca`; } else if (t >= 5) { return `Giubbotto`; } else { return `Cappotto.`; }
+};
 
-// 🛑 IMPORTANTE: Inietta gli stili CSS per la tabella
+const getTempColorClass = (temp) => {
+    const t = Number(temp);
+    if (t >= 30) { return "col-extreme"; } else if (t >= 25) { return "col-hot"; } else if (t >= 20) { return "col-mild"; } else if (t >= 15) { return "col-fresh"; } else if (t >= 10) { return "col-cold"; } else if (t >= 5) { return "col-freezing"; } else { return "col-intense"; }
+};
+
+/**
+ * Inietta stili CSS specifici utilizzando l'ID del contenitore.
+ */
 const injectDressTableStyles = () => {
-    // Evita di iniettare lo stile più volte
-    if (document.getElementById('dress-table-styles')) {
-        return;
-    }
-
+    if (document.getElementById('dress-table-styles')) return;
     const style = document.createElement('style');
     style.id = 'dress-table-styles';
-    style.innerHTML = `
-        /* Contenitore per lo scorrimento laterale */
-        .table-scroll-container {
-            overflow-x: auto; 
-            width: 100%; 
-            }
-
-        /* Stile base per la tabella (Desktop/Fisso) */
-        .hourly-dress-table.transposed-table {
-            border-collapse: collapse;
-            margin-top: 15px;
-            margin-bottom: 0px;
-            font-size: 0.85em; 
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            color: var(--text-color); 
-            box-shadow: 0 0 10px rgb(0 129 255);
+    style.innerHTML = ` 
+        #dress-table-container .hourly-dress-table {
+            width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px;
         }
-
-        /* Stile per intestazioni e celle (rese più strette) */
-        .transposed-table th, 
-        .transposed-table td {
-            padding: 5px 0px !important;
-            text-align: center;
-            border: 1px solid #3c3c3c; 
-            vertical-align: top; 
-            min-width: 70px !important; 
-            
+        #dress-table-container .hourly-dress-table th, 
+        #dress-table-container .hourly-dress-table td {
+            border: 1px solid #ddd; padding: 6px 2px; text-align: center; font-size: 0.85em; vertical-align: middle;
         }
-        
-        /* Stile specifico per le icone meteo */
-        .transposed-table .weather-icon-data {
-            font-size: 1.5em; 
-            padding-top: 5px !important; 
-            padding-bottom: 5px !important; 
-            line-height: 1;
+        #dress-table-container .hourly-dress-table th {
+            background-color: #000000; font-weight: bold; font-size: 0.9em; color: #ffffff;
         }
-        .transposed-table .weather-icon-data img {
-            width: 36px; 
-            height: 36px;
-        }
-
-
-        /* Colonna di intestazione fissa a sinistra */
-        .transposed-table th.header-col {
-            background-color: var(--table-row-even-bg); 
-            color: var(--text-color);
-            text-align: left;
-            width: 1px;
-            padding: 5px 8px;
+        #dress-table-container .hourly-dress-table td.temp-data {
             font-weight: bold;
-            position: sticky; 
-            left: 0;
-            z-index: 20; 
-            font-size: 1em; 
         }
-
-        /* Intestazione superiore (le ore) */
-        .transposed-table thead th {
-            background-color: var(--table-header-bg);
-            color: var(--text-color);
-            font-weight: 600;
+        #dress-table-container .col-extreme { background-color: #b00000; }
+        #dress-table-container .col-hot { background-color: #b06c00; }
+        #dress-table-container .col-mild { background-color: #b5b200; }
+        #dress-table-container .col-fresh { background-color: #00680e; }
+        #dress-table-container .col-cold { background-color: #006f91; }
+        #dress-table-container .col-freezing { background-color: #004991; }
+        #dress-table-container .col-intense { background-color: #730091; }
+        #dress-table-container .table-scroll-container {
+            overflow-x: auto;
+            max-width: 100%;
         }
-
-        /* MODIFICA CHIAVE: Targetta solo le celle della temperatura per l'aspetto "colorato" */
-        .transposed-table .temp-data {
-            font-weight: bold;
-            color: white !important; /* Testo bianco per la leggibilità sugli sfondi scuri */
-        }
-        
-        /* ECCEZIONE: Per il colore Giallo, il testo deve restare nero */
-        .transposed-table .col-mild {
-            color: black !important;
-        }
-        
-        /* Stile per il testo della raccomandazione (più compatto) */
-        .transposed-table .suggestion-data {
-              font-size: 0.75em; 
-              line-height: 1.1;
-        }
-        
-        /* Stile per le precipitazioni unite */
-        .transposed-table .precip-data {
-            font-size: 0.8em;
-        }
-        
-        
-        /* 🎨 CLASSI DI COLORE DI SFONDO (USATE SOLO SU .temp-data) 🎨 */
-        .col-extreme { background-color: #b00000; } /* Rosso (>= 30°C) */
-        .col-hot 	 { background-color: #b06c00; } /* Arancione (>= 25°C) */
-        .col-mild 	 { background-color: #b5b200; } /* Giallo chiaro (>= 20°C) */
-        .col-fresh 	 { background-color: #00680e; } /* Verde (>= 15°C) */
-        .col-cold 	 { background-color: #006f91; } /* Azzurro (>= 10°C) */
-        .col-freezing{ background-color: #004991; } /* Blu (>= 5°C) */
-        .col-intense { background-color: #730091; } /* Viola Scuro (< 5°C) */
     `;
     document.head.appendChild(style);
 };
 
 
 /**
- * Funzione di utilità per fornire raccomandazioni ultra-brevi sull'abbigliamento
- * basate sulla temperatura.
- *
- * @param {number} temp - Temperatura in Celsius.
- * @returns {string} Suggerimento di abbigliamento.
- */
-const getDressSuggestion = (temp) => {
-    const t = Number(temp);
-    const br = '<br>'; 
-
-    if (isNaN(t)) {
-        return "Dati non disponibili";
-    }
-
-    // Logica basata sulla Temperatura
-    if (t >= 30) {
-        return `Costume`;
-    } else if (t >= 25) {
-        return `T-shirt`;
-    } else if (t >= 20) {
-        return `Maglietta`;
-    } else if (t >= 15) {
-        return `Felpa`;
-    } else if (t >= 10) {
-        return `Giacca`;
-    } else if (t >= 5) {
-        return `Giubbotto`;
-    } else {
-        return `Cappotto.`;
-    }
-};
-
-/**
- * Restituisce la classe CSS per il colore della colonna.
- *
- * @param {number} temp - Temperatura in Celsius.
- * @returns {string} Classe CSS di colore.
- */
-const getTempColorClass = (temp) => {
-    const t = Number(temp);
-
-    if (isNaN(t)) {
-        return "";
-    }
-
-    if (t >= 30) {
-        return "col-extreme";
-    } else if (t >= 25) {
-        return "col-hot";
-    } else if (t >= 20) {
-        return "col-mild"; // Testo nero
-    } else if (t >= 15) {
-        return "col-fresh";
-    } else if (t >= 10) {
-        return "col-cold";
-    } else if (t >= 5) {
-        return "col-freezing";
-    } else {
-        return "col-intense";
-    }
-};
-
-
-/**
- * Aggiorna il contenitore dell'abbigliamento con una tabella oraria di 24 ore trasposta.
- *
- * @param {object} allData - Oggetto completo dei dati meteo.
+ * Aggiorna il contenitore dell'abbigliamento con una tabella oraria di 12 ore trasposta.
+ * @param {object} allData - Oggetto completo dei dati API.
  */
 export const generateHourlyDressTable = (allData) => {
-    // 1. INIETTA GLI STILI FISSI PRIMA DI GENERARE LA TABELLA
     injectDressTableStyles(); 
 
     const container = document.getElementById('dress-table-container');
-    
-    if (!container) {
-        console.error("Elemento '#dress-table-container' non trovato.");
-        return;
-    }
+    if (!container) return;
     
     container.innerHTML = ''; 
 
     const hourlyData = allData?.hourly;
+    const cityTimeZone = allData?.timezone;
+    const utcOffsetSeconds = allData?.utc_offset_seconds; 
 
-    if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0) {
-        container.innerHTML = '<p>Dati orari essenziali non disponibili per l\'abbigliamento.</p>';
+    if (!hourlyData || !hourlyData.time || hourlyData.time.length === 0 || !cityTimeZone || typeof utcOffsetSeconds === 'undefined') {
+        container.innerHTML = '<p>Dati orari essenziali non disponibili.</p>';
         return;
     }
 
-    const numColumns = 12; // Tabella di 24 ore
-    // Dati necessari per la logica delle icone
-    const precipitationSum = hourlyData.precipitation; 
-    const precipitationProbability = hourlyData.precipitation_probability;
-    const cloudCover = hourlyData.cloud_cover; 
-    const windSpeed = hourlyData.wind_speed_10m; 
-    const temperatureData = hourlyData.temperature_2m; 
+    // --- LOGICA DI CALCOLO DELL'INDICE DI PARTENZA (startIndex) ---
     
+    // 1. Ottieni il timestamp UTC corrente (neutro)
+    const currentTimeUtcMs = new Date().getTime(); 
 
-    // Array per raccogliere le righe di dati
+    // 2. Arrotonda l'ora UTC corrente all'ora intera precedente.
+    const currentHourUtcMs = Math.floor(currentTimeUtcMs / ONE_HOUR_MS) * ONE_HOUR_MS; 
+    
+    let timeIndex = -1; // Indice basato sull'ora UTC (del browser)
+
+    // 3. Trova l'indice del blocco dati API che corrisponde all'ora UTC calcolata.
+    for (let i = 0; i < hourlyData.time.length; i++) {
+        const dataTimeMs = new Date(hourlyData.time[i]).getTime();
+
+        if (dataTimeMs === currentHourUtcMs) {
+            timeIndex = i;
+            break;
+        }
+
+        // Fallback per cache non allineata
+        if (dataTimeMs > currentHourUtcMs && timeIndex === -1) {
+            timeIndex = Math.max(0, i - 1);
+            break;
+        }
+    }
+    
+    // Fallback estremo
+    if (timeIndex === -1 && hourlyData.time.length > 0) {
+        timeIndex = 0; 
+    }
+    
+    // 4. Calcolo dell'Offset Dinamico:
+    
+    // L'offset della città target (es: New York = -5 ore)
+    const targetOffsetHours = utcOffsetSeconds / 3600;
+    
+    // L'offset del fuso orario del tuo browser (es: Italia/CET = +1 o +2 ore)
+    // getTimezoneOffset() restituisce la differenza in minuti tra UTC e l'ora locale.
+    // Dobbiamo dividerla per -60 per ottenere le ore con il segno corretto (+1 o +2 per l'Italia).
+    const localOffsetHours = new Date().getTimezoneOffset() / -60; 
+
+    // L'offset necessario per allineare i DATI è la differenza tra il fuso orario locale e quello target.
+    const totalOffsetHours = localOffsetHours - targetOffsetHours; 
+
+    // Configurazione degli indici di lettura:
+    // a) L'ora (time) è letta dall'indice base non sfalsato (come richiesto)
+    const startIndexForTime = timeIndex; 
+    
+    // b) I dati sono letti dall'indice sfalsato per allinearsi all'ora della città target
+    const startIndexForData = timeIndex - totalOffsetHours; 
+
+    if (startIndexForTime < 0 || startIndexForTime >= hourlyData.time.length) {
+        container.innerHTML = '<p>Errore nel calcolo dell\'indice per l\'ora.</p>';
+        return;
+    }
+    
+    // --- FINE LOGICA DI CALCOLO INDICE BASE ---
+
+
+    const numColumns = 12; // Tabella di 12 ore
+    const { precipitation, precipitation_probability, cloud_cover, wind_speed_10m, temperature_2m, time } = hourlyData;
+    
     const hours = [];
     const weatherIcons = []; 
     const temperatures = [];
@@ -301,63 +185,42 @@ export const generateHourlyDressTable = (allData) => {
     const combinedPrecipitation = []; 
     const colorClasses = []; 
 
-    // Ottiene l'ora attuale e la arrotonda all'ora intera più vicina
-    const currentTime = new Date();
-    const currentHourMs = currentTime.setMinutes(0, 0, 0); 
-    
-    let startIndex = -1;
-
-    // 2. Trova l'indice di partenza (l'ora attuale nei dati API)
-    for (let i = 0; i < hourlyData.time.length; i++) {
-        if (new Date(hourlyData.time[i]).getTime() >= currentHourMs) {
-            startIndex = i;
-            break;
-        }
-    }
-
-    if (startIndex === -1) {
-          container.innerHTML = '<p>Dati orari per l\'ora attuale non trovati.</p>';
-          return;
-    }
-    
-    // 🆕 MODIFICA CHIAVE: Avanza l'indice di partenza di un'ora.
-    // L'ora corrente trovata (startIndex) sarà l'inizio della previsione.
-    // Aggiungiamo +1 per iniziare dall'ora successiva a quella trovata.
-    startIndex = startIndex + 1;
-    // Assicurati che l'indice non superi la lunghezza dei dati
-    if (startIndex >= hourlyData.time.length) {
-        container.innerHTML = '<p>Dati insufficienti per l\'ora successiva.</p>';
-        return;
-    }
-    
-    // 3. Itera per selezionare i 24 blocchi di dati orari
+    // 6. Itera per selezionare i 12 blocchi di dati orari
     for (let j = 0; j < numColumns; j++) {
-        const index = startIndex + j;
+        // Indice di lettura per l'ORA
+        const timeReadIndex = startIndexForTime + j; 
         
-        if (index >= hourlyData.time.length) {
+        // Indice di lettura per i DATI (dinamico)
+        const dataReadIndex = startIndexForData + j; 
+        
+        if (timeReadIndex >= time.length || dataReadIndex >= time.length || dataReadIndex < 0) {
             break; 
         }
 
-        const time = hourlyData.time[index];
-        const temp = temperatureData[index]; 
-        const pop = precipitationProbability ? (precipitationProbability[index] || 0) : 0;
-        const precip = precipitationSum ? (precipitationSum[index] || 0) : 0; 
+        const currentHourTime = time[timeReadIndex]; // Usa l'indice non sfalsato per l'ora
+        
+        // ACCESSO AI DATI: USIAMO L'INDICE dataReadIndex
+        const temp = temperature_2m[dataReadIndex]; 
+        const pop = precipitation_probability ? (precipitation_probability[dataReadIndex] || 0) : 0;
+        const precip = precipitation ? (precipitation[dataReadIndex] || 0) : 0; 
 
-        // Formatta l'ora (es. 14:00)
-        const date = new Date(time);
-        const formattedHour = date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        // Formatta l'ora con il fuso orario della città
+        const date = new Date(currentHourTime);
+        const formattedHourFull = date.toLocaleTimeString('it-IT', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: cityTimeZone 
+        });
         
-        hours.push(formattedHour.substring(0, 2)); // Solo l'ora (es. "14")
+        // Estraiamo l'ora a due cifre per l'intestazione della colonna (Es. "18")
+        const formattedHour = formattedHourFull.substring(0, 2); 
+        hours.push(formattedHour); 
         
-        // Chiama la funzione per l'icona HTML (gestisce giorno/notte)
-        const iconHtml = getHourlyWeatherIcon({
-             precipitation: precipitationSum,
-             cloud_cover: cloudCover,
-             wind_speed_10m: windSpeed,
-             precipitation_probability: precipitationProbability,
-             temperature_2m: temperatureData,
-             time: hourlyData.time
-        }, index);
+        // ⭐ NUOVA LOGICA: Estraiamo l'ora numerica per la decisione giorno/notte
+        const numericHourForIcon = parseInt(formattedHour);
+
+        // Chiama la funzione per l'icona HTML (PASSANDO L'ORA NUMERICA)
+        const iconHtml = getHourlyWeatherIcon(hourlyData, dataReadIndex, numericHourForIcon); 
         weatherIcons.push(iconHtml);
         
         temperatures.push(`${Math.round(temp)}°C`);
@@ -372,14 +235,13 @@ export const generateHourlyDressTable = (allData) => {
     }
 
     if (hours.length === 0) {
-        container.innerHTML = '<p>Dati insufficienti per la previsione oraria (24 colonne).</p>';
+        container.innerHTML = '<p>Dati insufficienti per la previsione oraria (12 colonne).</p>';
         return;
     }
 
 
-    // 4. Costruzione della tabella TRASPOSTA
+    // 7. Costruzione della tabella TRASPOSTA
     let tableHtml = `
-        
         <div class="table-scroll-container">
             <table class="hourly-dress-table transposed-table">
                 <thead>
@@ -405,6 +267,6 @@ export const generateHourlyDressTable = (allData) => {
         </div>
     `;
 
-    // 5. Inserisce la tabella nel DOM
+    // 8. Inserisce la tabella nel DOM
     container.innerHTML = tableHtml;
 };
