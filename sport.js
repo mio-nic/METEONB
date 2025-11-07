@@ -1,20 +1,46 @@
-// sport.js
+// sport.js - Modulo per la Tabella Attività Sportive/Rischio (VERSIONE MODIFICATA)
 
 // Importa le funzioni e le costanti necessarie da main.js
-import { getWeatherData, formatDate, getDailyWeatherEmoji } from './main.js'; // Aggiunto getDailyWeatherEmoji
+import { getWeatherData, getDailyWeatherEmoji } from './main.js'; 
 
 // --- CHIAVI DI STATO E LOCAL STORAGE ---
-// La chiave per i dati meteo principali (usata da table.js/main.js)
 const MAIN_WEATHER_DATA_KEY = 'weatherData'; 
-// Chiave per la preferenza sportiva dell'utente
 const ACTIVITY_KEY = 'sportModule_activity';
 
 // --- STATO GLOBALE DEL MODULO ---
-// 1. Carica l'attività preferita salvata
+// Rimuovo influenza/polline, uso 'escursione' come fallback se l'attività salvata era una di quelle eliminate.
 let currentActivity = localStorage.getItem(ACTIVITY_KEY) || 'escursione'; 
-
-// 2. Carica i dati meteo più recenti dalla cache principale (per persistenza al ricaricamento)
+if (currentActivity === 'influenza' || currentActivity === 'polline') {
+    currentActivity = 'escursione';
+}
 let currentWeatherData = JSON.parse(localStorage.getItem(MAIN_WEATHER_DATA_KEY)); 
+
+// --- FUNZIONI DI FORMATTAZIONE INTERNA ---
+
+/**
+ * Converte la stringa data (YYYY-MM-DD) in un'intestazione leggibile per la tabella sport.
+ * Mostra "Oggi" per il primo giorno e "Giorno DD/MM" per gli altri.
+ */
+const formatDayHeader = (dateStr, index) => {
+    const date = new Date(dateStr + 'T00:00:00'); 
+    
+    if (isNaN(date.getTime())) {
+        return 'Giorno ?';
+    }
+    
+    if (index === 0) {
+        return 'Oggi'; 
+    }
+    
+    // Mostra giorno della settimana abbreviato e data breve (es. "Gio 07/11")
+    const weekday = date.toLocaleDateString('it-IT', { weekday: 'short' });
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+
+    // Ritorna "Gio 07/11" (rimuovendo il punto se presente nell'abbreviazione del giorno)
+    return `${weekday.charAt(0).toUpperCase() + weekday.slice(1).replace('.', '')} ${day}/${month}`;
+};
+
 
 // --- LOGICA DI CALCOLO FAVOREVOLEZZA ---
 const calculateFavorability = (activity, dayData) => {
@@ -25,48 +51,37 @@ const calculateFavorability = (activity, dayData) => {
     const wind = dayData.wind_speed_10m_max;
 
     let score = 0;
-    const maxScore = 400; // 4 fattori * 100 max
+    const maxScore = 400; 
 
     switch (activity) {
         case 'pesca':
-            // 🎣 Condizioni Ideali: Temp (10-25°C), Zero Pioggia (0%), Poco Vento (<= 5 km/h), Umidità Neutra
-            // NOTE: Ho impostato 0% di pioggia per 100 punti, rendendolo più severo.
-            score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); // Intervallo intermedio più stretto
-            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); // Solo 0% prende 100, <= 5% prende 60
-            score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); // Massimi 100 punti solo per vento molto basso (<= 5 km/h)
-            score += 100; // Umidità neutra (fattore non discriminante)
+            score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); 
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); 
+            score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); 
+            score += 100; // Umidità neutra
             break;
             
         case 'escursione':
-            // 🥾 Condizioni Ideali: Temp (15-25°C), Bassa Umidità (<= 50%), Zero Pioggia (0%), Poco Vento (<= 10 km/h)
-            score += (temp >= 15 && temp <= 25) ? 100 : (temp >= 10 && temp <= 30 ? 60 : 20); // Intervallo intermedio ridotto
-            score += (humidity <= 50) ? 100 : (humidity <= 70 ? 60 : 20); // Massimi 100 punti solo per umidità bassa (<= 50%)
-            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10); // Zero Pioggia rigoroso (0%)
-            score += (wind <= 10) ? 100 : (wind <= 20 ? 60 : 20); // Vento massimo 10 km/h per 100 punti
+            score += (temp >= 15 && temp <= 25) ? 100 : (temp >= 10 && temp <= 30 ? 60 : 20); 
+            score += (humidity <= 50) ? 100 : (humidity <= 70 ? 60 : 20); 
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10); 
+            score += (wind <= 10) ? 100 : (wind <= 20 ? 60 : 20); 
             break;
-
-        /* RIMOSSO: case 'influenza':
-        // ... Logica di calcolo del rischio influenza ...
-        break; */
-
-        /* RIMOSSO: case 'polline':
-        // ... Logica di calcolo del rischio polline ...
-        break; */
+            
+        // Rimosse le logiche 'influenza' e 'polline'
 
         case 'guida':
-            // 🚗 Condizioni Ideali: Temp (10-25°C), Zero Pioggia (0%), Poco Vento (<= 15 km/h), Bassa Umidità (<= 60%)
-            score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); // Intervallo ideale più stretto
-            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); // Zero pioggia rigoroso (0%)
-            score += (wind <= 15) ? 100 : (wind <= 25 ? 60 : 20); // Vento massimo 15 km/h per 100 punti
-            score += (humidity <= 60) ? 100 : (humidity <= 80 ? 60 : 20); // Umidità massima 60% per 100 punti
+            score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); 
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); 
+            score += (wind <= 15) ? 100 : (wind <= 25 ? 60 : 20); 
+            score += (humidity <= 60) ? 100 : (humidity <= 80 ? 60 : 20); 
             break;
             
         case 'sfalcio_erba':
-            // 🚜 Condizioni Ideali: Temp Mite (20-28°C), Zero Pioggia (0%), Vento Nullo (<= 5 km/h), Umidità Bassa (<= 40%)
-            score += (temp >= 20 && temp <= 28) ? 100 : (temp >= 15 && temp <= 30 ? 60 : 20); // Intervallo ideale più stretto
-            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10); // Zero pioggia rigoroso (0%)
-            score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); // Vento molto basso (<= 5 km/h) per 100 punti
-            score += (humidity <= 40) ? 100 : (humidity <= 60 ? 60 : 20); // Umidità molto bassa (<= 40%) per 100 punti
+            score += (temp >= 20 && temp <= 28) ? 100 : (temp >= 15 && temp <= 30 ? 60 : 20); 
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10); 
+            score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); 
+            score += (humidity <= 40) ? 100 : (humidity <= 60 ? 60 : 20); 
             break;
 
         default:
@@ -149,17 +164,13 @@ const generateSportTable = () => {
     const days = dailyData.time.slice(0, 7); // I primi 7 giorni
     const sportSelect = document.getElementById('sport-select');
     
-    // Titolo dinamico
-    // Controlla se l'attività corrente è ancora nel menù (se non lo è, usa il default 'Escursione')
-    const selectedOption = Array.from(sportSelect.options).find(option => option.value === activity);
-    let activityName = selectedOption ? selectedOption.text : 'Attività';
+    // RIMOZIONE: Rimosso il titolo dinamico "Livello di..."
 
-    let tableHTML = `<h2 style="margin-top: 15px;">Livello di ${activityName} per ${currentWeatherData.cityName || 'la Città Corrente'}</h2>`;
-    tableHTML += `<div class="table-container sport-table-container"><table class="sport-table"><thead><tr>`;
+    let tableHTML = `<div class="table-container sport-table-container"><table class="sport-table"><thead><tr>`;
     
-    // Intestazione con i giorni della settimana
-    days.forEach(dateStr => {
-        tableHTML += `<th>${formatDate(dateStr)}</th>`;
+    // Intestazione con i giorni della settimana - USA formatDayHeader
+    days.forEach((dateStr, index) => { 
+        tableHTML += `<th>${formatDayHeader(dateStr, index)}</th>`; 
     });
     tableHTML += `</tr></thead><tbody>`;
 
@@ -228,6 +239,7 @@ const ensureUIInitialized = () => {
     
     // Contenitore principale del menu (lo creiamo solo se non esiste)
     if (!document.getElementById('sport-select-container')) {
+        // RIMOZIONE: Rimosse le opzioni 'influenza' e 'polline'
         document.getElementById('sport-widget').innerHTML = `
             <div class="sport-menu-container" id="sport-select-container" style="margin-top: 20px; text-align: center;">
                 <label for="sport-select" style="font-weight: bold;">Seleziona Attività:</label>
@@ -241,12 +253,6 @@ const ensureUIInitialized = () => {
             <div id="sport-table-container"></div>
         `;
         
-        // Se l'attività salvata era 'influenza' o 'polline', resettala a 'escursione'
-        if (currentActivity === 'influenza' || currentActivity === 'polline') {
-            currentActivity = 'escursione';
-            localStorage.setItem(ACTIVITY_KEY, currentActivity); 
-        }
-
         // Aggiungi l'event listener per il cambio di attività
         const sportSelect = document.getElementById('sport-select');
         sportSelect.value = currentActivity; // Sincronizza con lo stato persistente
@@ -260,10 +266,8 @@ const ensureUIInitialized = () => {
 
 
 // --- PUNTO DI INGRESSO PRINCIPALE (ESPORTATO) ---
-// QUESTA È L'UNICA DICHIARAZIONE ESPORTATA DI updateSportTable.
 /**
  * **Funzione esportata** che table.js deve chiamare ogni volta che i dati meteo cambiano.
- * Questa funzione RICEVE e USA i dati immediatamente per forzare l'aggiornamento del widget.
  * @param {object} data - L'oggetto dati completo (daily, hourly, cityName, etc.)
  */
 export const updateSportTable = (data) => {
@@ -272,13 +276,13 @@ export const updateSportTable = (data) => {
     // 1. Aggiorna lo stato interno con i NUOVI dati ricevuti.
     currentWeatherData = data; 
     
-    // 2. Assicura che l'UI sia stata creata (utile se table.js si carica prima del DOM)
+    // 2. Assicura che l'UI sia stata creata 
     ensureUIInitialized(); 
     
     // 3. Ridisegna la tabella con i nuovi dati
     generateSportTable(); 
     
-    // 4. Sincronizza il menu a tendina (nel caso in cui sia la prima esecuzione)
+    // 4. Sincronizza il menu a tendina 
     const sportSelect = document.getElementById('sport-select');
     if (sportSelect) {
         sportSelect.value = currentActivity;
@@ -289,8 +293,7 @@ export const updateSportTable = (data) => {
 // --- INIZIALIZZAZIONE AL CARICAMENTO DELLA PAGINA (INTERNA) ---
 
 /**
- * Funzione di inizializzazione: gestisce il caricamento del modulo all'avvio della pagina (DOMContentLoaded).
- * Nota: NON è esportata, per evitare il conflitto di nome con updateSportTable.
+ * Funzione di inizializzazione: gestisce il caricamento del modulo all'avvio della pagina.
  */
 const initSportModule = async () => { 
     ensureUIInitialized(); // Crea l'UI (menu e contenitori)
@@ -315,5 +318,4 @@ const initSportModule = async () => {
 };
 
 // Avvia il modulo sport quando il DOM è completamente caricato
-
 document.addEventListener('DOMContentLoaded', initSportModule);
