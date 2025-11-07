@@ -216,7 +216,7 @@ body.page-with-fixed-header .container {
 }
 
 #locationName {
-	font-size: 0.9em;
+	font-size: 0.8em;
     font-weight: 600;
     /* Rimuoviamo il margine per evitare disallineamenti */
     margin: 0; 
@@ -226,7 +226,7 @@ body.page-with-fixed-header .container {
     text-align: center;
 }
 #lastUpdate {
-    font-size: 0.85em;
+    font-size: 0.7em;
     opacity: 0.9;
     text-align: center;
     padding-left: 25px; /* Aumentiamo il padding a sinistra */
