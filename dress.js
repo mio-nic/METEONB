@@ -71,7 +71,7 @@ const injectDressTableStyles = () => {
         }
         #dress-table-container .hourly-dress-table th, 
         #dress-table-container .hourly-dress-table td {
-            border: 1px solid #363636; padding: 6px 2px; text-align: center; font-size: 0.85em; vertical-align: middle;
+            border: 1px solid #363636; padding: 6px 2px; text-align: center; font-size: 0.85em; vertical-align: middle; width: 60px;
         }
         #dress-table-container .hourly-dress-table th {
             background-color: #000000; font-weight: bold; font-size: 0.9em; color: #ffffff;
