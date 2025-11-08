@@ -1,7 +1,6 @@
-// dress.js - Versione Finale Sincronizzata Icone Giorno/Notte
+// dress.js - Versione Finale Sincronizzata Icone Giorno/Notte (Logica basata sull'ora della Città)
 
 // --- CONFIGURAZIONE GLOBALE (Lasciare come 0) ---
-// L'offset non è più manuale; viene calcolato automaticamente in base ai fusi orari.
 // --------------------------------------------------
 
 // --- DIPENDENZE E COSTANTI ---
@@ -30,14 +29,14 @@ const getIconNumberFromData = (precipitation, cloudCover, windSpeed, precipProb,
  *
  * @param {object} data - Dati orari completi dall'API.
  * @param {number} index - Indice dell'ora corrente.
- * @param {number} numericHour - L'ora numerica (0-23) della colonna della tabella. ⭐ MODIFICATO
+ * @param {number} numericHour - L'ora numerica (0-23) della colonna della tabella.
  * @returns {string} Tag HTML dell'icona.
  */
 const getHourlyWeatherIcon = (data, index, numericHour) => {
     const { precipitation, cloud_cover, wind_speed_10m, precipitation_probability, temperature_2m } = data;
     const iconNumber = getIconNumberFromData(precipitation[index], cloud_cover[index], wind_speed_10m[index], precipitation_probability[index], temperature_2m[index]);
     
-    // ⭐ USO DI numericHour GIA' PASSATO E RICONOSCIUTO NELLA COLONNA
+    // Uso di numericHour per la decisione giorno/notte nella città target
     const isNight = numericHour >= 18 || numericHour < 6;
     
     // Applica l'icona notturna (9) solo se l'icona originale è soleggiata/parzialmente nuvolosa (1, 2, 3)
@@ -117,61 +116,88 @@ export const generateHourlyDressTable = (allData) => {
     }
 
     // --- LOGICA DI CALCOLO DELL'INDICE DI PARTENZA (startIndex) ---
-    
-    // 1. Ottieni il timestamp UTC corrente (neutro)
-    const currentTimeUtcMs = new Date().getTime(); 
 
-    // 2. Arrotonda l'ora UTC corrente all'ora intera precedente.
-    const currentHourUtcMs = Math.floor(currentTimeUtcMs / ONE_HOUR_MS) * ONE_HOUR_MS; 
-    
-    let timeIndex = -1; // Indice basato sull'ora UTC (del browser)
+    // 1. Ottieni l'ora intera attuale nella città target (0-23)
+    const now = new Date();
+    // Ottieni la stringa dell'ora nella città target (es. "01:00")
+    const cityTimeString = now.toLocaleTimeString('it-IT', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: cityTimeZone 
+    });
+    // Estrai l'ora numerica arrotondata per eccesso (o l'ora corrente se non sono passati minuti)
+    const currentCityHour = parseInt(cityTimeString.substring(0, 2));
 
-    // 3. Trova l'indice del blocco dati API che corrisponde all'ora UTC calcolata.
+    // 2. Trova l'indice corretto nell'array API.
+    // L'array API contiene timestamp UTC, che formattati con timeZone: cityTimeZone, 
+    // devono corrispondere all'ora attuale della città (currentCityHour).
+        
+    let timeIndex = -1; // Indice unico di partenza
+    let minTimeDifference = Infinity; // Per trovare l'ora più vicina in caso di secondi
+
     for (let i = 0; i < hourlyData.time.length; i++) {
-        const dataTimeMs = new Date(hourlyData.time[i]).getTime();
+        const dataTime = new Date(hourlyData.time[i]);
+        
+        // Formatta il timestamp API nell'ora della città per il confronto (es. "01")
+        const apiHourString = dataTime.toLocaleTimeString('it-IT', { 
+            hour: '2-digit', 
+            timeZone: cityTimeZone 
+        }).substring(0, 2);
+        
+        const apiHour = parseInt(apiHourString);
 
-        if (dataTimeMs === currentHourUtcMs) {
+        // Se l'ora formattata dell'API corrisponde all'ora attuale della città:
+        if (apiHour === currentCityHour) {
+            // Troviamo l'indice che visualizzerà l'ora corretta.
             timeIndex = i;
-            break;
+            // Per maggiore precisione, se siamo a cavallo dell'ora, potremmo
+            // voler trovare l'indice con il timestamp più vicino all'ora intera.
+            
+            // Per il problema mezzanotte/cambio giorno, ci fermiamo al primo match.
+            break; 
         }
+    }
+        
+    // Fallback: cerca l'ora successiva se non abbiamo trovato un match esatto (es. se l'API non è aggiornata)
+    if (timeIndex === -1 && hourlyData.time.length > 0) {
+        let foundNextHour = false;
+        for (let i = 0; i < hourlyData.time.length; i++) {
+            const dataTime = new Date(hourlyData.time[i]);
+            const apiHourString = dataTime.toLocaleTimeString('it-IT', { 
+                hour: '2-digit', 
+                timeZone: cityTimeZone 
+            }).substring(0, 2);
+            const apiHour = parseInt(apiHourString);
 
-        // Fallback per cache non allineata
-        if (dataTimeMs > currentHourUtcMs && timeIndex === -1) {
-            timeIndex = Math.max(0, i - 1);
-            break;
+            // Cerca la prima ora successiva all'ora attuale
+            if (apiHour > currentCityHour) {
+                timeIndex = i; // Iniziamo da questa ora (che è la prossima)
+                foundNextHour = true;
+                break;
+            }
+        }
+        
+        if (!foundNextHour) {
+            // Se non trova nessuna ora successiva (siamo quasi alla fine dei dati del giorno),
+            // inizia semplicemente dal primo dato disponibile.
+            timeIndex = 0;
         }
     }
     
-    // Fallback estremo
-    if (timeIndex === -1 && hourlyData.time.length > 0) {
+    // Fallback estremo se ancora non trovato.
+    if (timeIndex === -1) {
         timeIndex = 0; 
     }
-    
-    // 4. Calcolo dell'Offset Dinamico:
-    
-    // L'offset della città target (es: New York = -5 ore)
-    const targetOffsetHours = utcOffsetSeconds / 3600;
-    
-    // L'offset del fuso orario del tuo browser (es: Italia/CET = +1 o +2 ore)
-    // getTimezoneOffset() restituisce la differenza in minuti tra UTC e l'ora locale.
-    // Dobbiamo dividerla per -60 per ottenere le ore con il segno corretto (+1 o +2 per l'Italia).
-    const localOffsetHours = new Date().getTimezoneOffset() / -60; 
-
-    // L'offset necessario per allineare i DATI è la differenza tra il fuso orario locale e quello target.
-    const totalOffsetHours = localOffsetHours - targetOffsetHours; 
-
-    // Configurazione degli indici di lettura:
-    // a) L'ora (time) è letta dall'indice base non sfalsato (come richiesto)
+        
+    // 3. Configurazione degli indici di lettura: USIAMO UN SOLO INDICE
     const startIndexForTime = timeIndex; 
-    
-    // b) I dati sono letti dall'indice sfalsato per allinearsi all'ora della città target
-    const startIndexForData = timeIndex - totalOffsetHours; 
+    const startIndexForData = timeIndex; 
 
     if (startIndexForTime < 0 || startIndexForTime >= hourlyData.time.length) {
-        container.innerHTML = '<p>Errore nel calcolo dell\'indice per l\'ora.</p>';
+        container.innerHTML = '<p>Errore nel calcolo dell\'indice di partenza. Dati non disponibili.</p>';
         return;
     }
-    
+
     // --- FINE LOGICA DI CALCOLO INDICE BASE ---
 
 
@@ -185,41 +211,39 @@ export const generateHourlyDressTable = (allData) => {
     const combinedPrecipitation = []; 
     const colorClasses = []; 
 
-    // 6. Itera per selezionare i 12 blocchi di dati orari
+    // 4. Itera per selezionare i 12 blocchi di dati orari
     for (let j = 0; j < numColumns; j++) {
-        // Indice di lettura per l'ORA
+        // Indice di lettura UNICO per ORA e DATI
         const timeReadIndex = startIndexForTime + j; 
-        
-        // Indice di lettura per i DATI (dinamico)
         const dataReadIndex = startIndexForData + j; 
         
         if (timeReadIndex >= time.length || dataReadIndex >= time.length || dataReadIndex < 0) {
             break; 
         }
 
-        const currentHourTime = time[timeReadIndex]; // Usa l'indice non sfalsato per l'ora
+        const currentHourTime = time[timeReadIndex]; // Timestamp UTC
         
-        // ACCESSO AI DATI: USIAMO L'INDICE dataReadIndex
+        // ACCESSO AI DATI E ORA: USIAMO dataReadIndex/timeReadIndex
         const temp = temperature_2m[dataReadIndex]; 
         const pop = precipitation_probability ? (precipitation_probability[dataReadIndex] || 0) : 0;
         const precip = precipitation ? (precipitation[dataReadIndex] || 0) : 0; 
 
-        // Formatta l'ora con il fuso orario della città
+        // Formatta il timestamp UTC con il fuso orario della città (CORRETTO)
         const date = new Date(currentHourTime);
         const formattedHourFull = date.toLocaleTimeString('it-IT', { 
             hour: '2-digit', 
             minute: '2-digit',
-            timeZone: cityTimeZone 
+            timeZone: cityTimeZone // Questo converte il timestamp UTC nell'ora visualizzata (es. 02:00)
         });
         
-        // Estraiamo l'ora a due cifre per l'intestazione della colonna (Es. "18")
+        // Estraiamo l'ora a due cifre per l'intestazione della colonna (Es. "02")
         const formattedHour = formattedHourFull.substring(0, 2); 
         hours.push(formattedHour); 
         
-        // ⭐ NUOVA LOGICA: Estraiamo l'ora numerica per la decisione giorno/notte
+        // Estraiamo l'ora numerica per la decisione giorno/notte
         const numericHourForIcon = parseInt(formattedHour);
 
-        // Chiama la funzione per l'icona HTML (PASSANDO L'ORA NUMERICA)
+        // Chiama la funzione per l'icona HTML (PASSANDO L'ORA NUMERICA e l'indice dei DATI)
         const iconHtml = getHourlyWeatherIcon(hourlyData, dataReadIndex, numericHourForIcon); 
         weatherIcons.push(iconHtml);
         
@@ -240,7 +264,7 @@ export const generateHourlyDressTable = (allData) => {
     }
 
 
-    // 7. Costruzione della tabella TRASPOSTA
+    // 5. Costruzione della tabella TRASPOSTA
     let tableHtml = `
         <div class="table-scroll-container">
             <table class="hourly-dress-table transposed-table">
@@ -267,6 +291,6 @@ export const generateHourlyDressTable = (allData) => {
         </div>
     `;
 
-    // 8. Inserisce la tabella nel DOM
+    // 6. Inserisce la tabella nel DOM
     container.innerHTML = tableHtml;
 };
