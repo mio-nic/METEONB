@@ -24,7 +24,7 @@ const getWeatherAlertStatus = (weatherCode, temp, precipitation, windSpeed, isDa
         alertLevel = 3; // Rosso
     } else if (w >= 30 || p >= (isDaily ? 30 : 10) || t <= -1) {
         alertLevel = 2; // Arancione
-    } else if (w >= 20 || p >= (isDaily ? 20 : 5) || t <= 5) {
+    } else if (w >= 20 || p >= (isDaily ? 20 : 5) || t <= 4) {
         alertLevel = 1; // Giallo
     }
 
@@ -73,7 +73,7 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
 
     // Allerta Gialla (Rischio Basso)
     if (statusClass === 'dot-buono') {
-        if (t <= 5 && t > -1) risks.push('freddo (temperatura <5°C)');
+        if (t <= 4 && t > -1) risks.push('freddo (temperatura <4°C)');
         if (w >= 20) risks.push('raffiche di vento (>20km/h)');
         if (p >= 20) risks.push('piogge isolate (>20mm)');
         if (risks.length > 0) return `Rischio Moderato di ${risks.join(', ')}`;
@@ -196,25 +196,7 @@ const getAlertStyles = (alertColor) => {
                 max-width: 100%; 
             }
             
-            /* --- STILI CARD DATI ATTUALI (DUE COLONNE FISSE) --- */
-            #currentWeatherCardContainer {
-                border-radius: 15px;
-                box-shadow: 0 0 40px rgb(0 129 255);
-            }
             
-            #currentWeatherCardContent {
-                display: flex; 
-                padding: 10px 0;
-            }
-
-            #currentWeatherCardContent > div:first-child {
-                 border-right: 1px solid var(--border-color); 
-                 padding: 5px 15px; 
-            }
-
-            #currentWeatherCardContent > div:last-child {
-                padding: 5px 15px;
-            }
 
             /* --- NUOVI STILI PER IL MENÙ A TENDINA (Ricerca Città) --- */
             
@@ -359,8 +341,8 @@ const renderCurrentWeatherCard = (allData, currentTimeIndex) => {
 
     const numericMax = typeof dailyData.temperature_2m_max[0] === 'number';
     const numericMin = typeof dailyData.temperature_2m_min[0] === 'number';
-    // Calcolo della temperatura media giornaliera (la usiamo per l'allerta freddo)
-    const dailyAvgTemp = (numericMax && numericMin) ? (Number(maxTemp) + Number(minTemp)) / 2 : 0;
+// Controlla se minTemp è un numero valido E se è minore o uguale a 4.
+const dailyAvgTemp = (numericMax && numericMin) ? (Number(maxTemp) + Number(minTemp)) / 2 : 0;
     
     // Calcola lo stato di allerta
     const dailyAlertClass = getWeatherAlertStatus(null, dailyAvgTemp, precipitationSum, maxDailyWindSpeed, true);
@@ -375,40 +357,15 @@ const renderCurrentWeatherCard = (allData, currentTimeIndex) => {
     
     const dailyPrecipitationProb = dailyData.precipitation_probability_max.length > 0 ? dailyData.precipitation_probability_max[0] : "N/D";
 
-    const detailsMap = [
-        { label: 'Copertura', value: currentCloudCover, unit: '%', emoji: '☁️' },
-        { label: 'Vento', value: currentWindSpeed, unit: 'km/h', emoji: '💨' },
-        { label: 'Pioggia (ora)', value: Math.round(currentPrecipitation * 10) / 10, unit: 'mm', emoji: '🌧️' },
-        { label: 'Prob. Pioggia', value: currentPrecipitationProb, unit: '%', emoji: '☔' },
-    ];
+    
 
-    let detailsHtml = '';
-    detailsMap.forEach(d => {
-        detailsHtml += formatDetail(d.emoji, d.label, d.value, d.unit);
-    });
+    
 
     return `
         ${alertStyles} 
         ${newAlertCard} 
-        <div id="currentWeatherCardContainer" style="
-              background-color: rgba(30, 30, 30, 0.9); 
-              color: var(--text-color); 
-              border: 1px solid var(--border-color); 
-              padding: 0px 0px; 
-              margin-top: 10px; 
-              border: 1px solid rgba(66, 161, 255, 0.3);
-        ">
-            <div id="currentWeatherCardContent">
-                <div style="flex: 1; text-align: left; display: flex; flex-direction: column;">
-                    <div style="font-size: 0.8em; font-weight: bold; color: var(--secondary-text-color);">Max: ${maxTemp}° | Min: ${minTemp}°</div>
-                    <div style="font-size: 2em; font-weight: bold; line-height: 1.2; color: var(--text-color);">
-                        ${weatherEmojiNow} ${currentTemp}°C
-                    </div>
-                    <div style="font-size: 0.9em; color: var(--secondary-text-color);">${currentWeatherDescription}</div>
-                </div>
-                <div style="flex: 1.5; display: flex; flex-direction: column;">
-                    ${detailsHtml}
-                </div>
+        
+            
             </div>
         </div>
     `;
