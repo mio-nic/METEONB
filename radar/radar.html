@@ -63,6 +63,14 @@
         padding-top: 65%; 
     }
 }
+
+table { width: 90%; border-collapse: collapse; margin: 20px auto; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #333; color: white; }
+        .sole { background-color: #74704b; } /* Giallo chiaro */
+        .luna { background-color: #3b414e; } /* Azzurro chiaro */
+        .fase { font-weight: bold; }
+        .nota { font-size: 0.8em; color: gray; margin-top: 20px; }
     </style>
 </head>
 
@@ -115,7 +123,7 @@
          <div class="container">
        <div class="iframe-responsive-wrapper">
 <iframe 
-  src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=8&overlay=radar&product=radar&level=surface&lat=45.566&lon=11.983&message=true"
+  src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=8&overlay=radar&product=radar&level=surface&lat=-70.566&lon=11.983&message=true"
   frameborder="0"
   allow="geolocation 'none'; fullscreen"
   >
@@ -125,6 +133,29 @@
 
 <div id="precipitationChartContainer" style="width: 100%; height: 200px;"></div>
       
+      
+      <h1 id="titoloTabella">Caricamento dati celesti...</h1>
+    
+    
+
+    <table>
+        <thead>
+            <tr>
+                <th>Giorno</th>
+                <th class="sole">Alba Sole</th>
+                <th class="sole">Tramonto Sole</th>
+                <th class="luna">Alba Luna</th>
+                <th class="luna">Tramonto Luna</th>
+                <th class="fase">Fase Lunare</th>
+            </tr>
+        </thead>
+        <tbody id="tabellaCorpo">
+            </tbody>
+    </table>
+
+    <p class="nota">I dati sono relativi alle coordinate: Caricamento in corso...</p>
+      
+      
 </div>
      
     
@@ -133,6 +164,7 @@
 <script type="module" src="../main.js"></script>
 <script type="module" src="../bar.js"></script>
 <script type="module" src="city.js"></script>
+<script type="module" src="rise.js"></script>
 
     
 </body>
