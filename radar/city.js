@@ -1,9 +1,9 @@
-// city.js - Versione Completa
-// Contiene la logica di ricerca, il caricamento dei dati meteo,
-// l'aggiornamento dell'iframe Windy, e il rendering del grafico Highcharts locale.
+// city.js - Versione Completa e Definitiva (Filtro 25 Ore + Asse X in UTC)
+// Implementa il filtro dinamico per le successive 25 ore e mantiene l'asse X in UTC.
 
 // Importazioni da main.js
 import { getWeatherData, searchCities } from '../main.js';
+import { updateCelestialTable } from './rise.js';
 
 // Variabile per mantenere l'intervallo di aggiornamento della linea oraria sul grafico (Highcharts)
 let chartUpdateInterval = null; 
@@ -25,23 +25,25 @@ const drawPrecipitationChartLocal = (hourlyData, utcOffsetSeconds, containerId) 
         return;
     }
     
-    // 1. Prepara il filtro per "oggi"
-    const now = new Date();
-    const todayStartOfLocalDay = new Date(now.getTime() + utcOffsetSeconds * 1000);
-    todayStartOfLocalDay.setUTCHours(0, 0, 0, 0); 
-    const todayTimestampStart = todayStartOfLocalDay.getTime();
+    // 1. Definisce l'intervallo temporale per il filtro.
+    
+    // Otteniamo il timestamp UTC attuale (perché i dati grezzi sono in UTC)
+    const nowUtc = Date.now();
+    
+    // Definiamo un intervallo di circa 25 ore (25 * 60 * 60 * 1000 millisecondi)
+    const lookaheadTimestamp = nowUtc + (25 * 3600 * 1000); 
+    
 
-    // 2. Filtra i dati solo per le 24 ore di "oggi"
+    // 2. Filtra i dati solo per le prossime 25 ore a partire dall'ora attuale.
     const dataForToday = hourlyData.time.map((timeStr, index) => {
         const utcDate = new Date(timeStr);
-        const localTimestamp = utcDate.getTime() + utcOffsetSeconds * 1000;
+        const utcTimestamp = utcDate.getTime();
         
-        const dateForComparison = new Date(localTimestamp);
-        dateForComparison.setUTCHours(0, 0, 0, 0); 
-
-        if (dateForComparison.getTime() === todayTimestampStart) {
+        // Filtra solo i dati che sono successivi o uguali all'ora attuale del dispositivo
+        // e precedenti all'intervallo di previsione (25 ore).
+        if (utcTimestamp >= nowUtc && utcTimestamp < lookaheadTimestamp) {
             return {
-                timestamp: localTimestamp, 
+                timestamp: utcTimestamp, // Timestamp UTC originale (base del dato)
                 precipitation: hourlyData.precipitation[index]
             };
         }
@@ -50,8 +52,8 @@ const drawPrecipitationChartLocal = (hourlyData, utcOffsetSeconds, containerId) 
 
     // Estrai i dati finali per Highcharts
     const chartCategories = dataForToday.map(item => 
-        // Formato ora a due cifre (es. 09, 15)
-        new Date(item.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit' })
+        // L'ASSE X RIMANE IN ORA UTC (BASE DEL DATO) come richiesto
+        new Date(item.timestamp).getUTCHours().toString().padStart(2, '0')
     );
     const chartSeriesData = dataForToday.map(item => item.precipitation);
 
@@ -66,35 +68,42 @@ const drawPrecipitationChartLocal = (hourlyData, utcOffsetSeconds, containerId) 
         chartUpdateInterval = null;
     }
 
-    // --- LOGICA DELLA LINEA DELL'ORA CORRENTE ---
+    // --- LOGICA DELLA LINEA DELL'ORA CORRENTE (ORA LOCALE CITTÀ SU ASSE UTC) ---
     const updatePlotLine = (chart) => {
-        // Calcola l'ora corrente in formato 'HH' a due cifre
-        const currentLocalHour = new Date(new Date().getTime() + utcOffsetSeconds * 1000)
-            .toLocaleTimeString('it-IT', { hour: '2-digit' });
         
-        // Trova l'indice (la colonna) corrispondente all'ora attuale
-        const categoryIndex = chartCategories.indexOf(currentLocalHour);
+        // 1. Calcola il timestamp locale della città (tempo UTC del dispositivo + offset)
+        const nowUtcPlot = new Date(new Date().toUTCString());
+        const nowLocalTimestamp = nowUtcPlot.getTime() + utcOffsetSeconds * 1000;
         
+        // 2. Estrai l'oggetto Data locale della città
+        const localDateForCity = new Date(nowLocalTimestamp);
+        
+        // 3. Calcola l'ora UTC che corrisponde a quell'istante corretto.
+        // Questo valore (HH) sarà usato per trovare la categoria sull'asse X (che è in UTC)
+        const hourToFindInUtcCategories = localDateForCity.getUTCHours().toString().padStart(2, '0');
+        
+        // 4. Trova l'indice della categoria UTC corrispondente
+        const categoryIndex = chartCategories.indexOf(hourToFindInUtcCategories);
+        
+
         if (categoryIndex !== -1) {
-            // Calcola la posizione al centro della colonna (indice - 0.5 per la colonna o + 0.5 tra colonne)
-            // Usiamo l'indice intero per centrare sulla categoria
+            // Posizione al centro della colonna
             const plotLineValue = categoryIndex + 0.5;
 
             // Rimuove la vecchia linea se esiste
             chart.xAxis[0].removePlotLine('current-time-line');
             
-            // Aggiunge la nuova linea verticale
+            // Aggiunge la nuova linea verticale (solida)
             chart.xAxis[0].addPlotLine({
                 value: plotLineValue,
                 color: 'red',
                 width: 2,
-                dashStyle: 'ShortDot', // Tratteggio rosso per simulare il "lampeggio" dinamico
+                dashStyle: 'Solid',
                 id: 'current-time-line',
                 zIndex: 5,
             });
-            // console.log(`PlotLine posizionata all'ora: ${currentLocalHour} (Indice: ${categoryIndex})`);
         } else {
-            // Rimuovi se l'ora corrente è fuori dai dati mostrati
+            // Rimuovi se l'ora corrente (nel fuso orario della città) è fuori dai dati mostrati
             chart.xAxis[0].removePlotLine('current-time-line');
         }
     };
@@ -146,7 +155,8 @@ const drawPrecipitationChartLocal = (hourlyData, utcOffsetSeconds, containerId) 
             enabled: false
         },
         tooltip: {
-            headerFormat: '<span style="font-size:10px">{point.key}:00</span><br/>',
+            // Usa {point.key}:00 per mostrare l'ora esatta del dato (che è UTC)
+            headerFormat: '<span style="font-size:10px">{point.key}:00 UTC</span><br/>', 
             pointFormat: '<span style="color:{point.color}">\u25CF</span> {series.name}: <b>{point.y:.2f} mm</b>'
         },
         plotOptions: {
@@ -176,7 +186,7 @@ const drawPrecipitationChartLocal = (hourlyData, utcOffsetSeconds, containerId) 
 };
 
 
-// --- 2. FUNZIONI DI VISUALIZZAZIONE ---
+// --- 2. FUNZIONI DI VISUALIZZAZIONE (INVARIATE) ---
 
 /**
  * Controlla la visualizzazione della barra di ricerca e dell'input.
@@ -248,7 +258,7 @@ const renderSuggestions = (cities) => {
 };
 
 
-// --- 3. FUNZIONE PRINCIPALE: initData ---
+// --- 3. FUNZIONE PRINCIPALE: initData (INVARIATA) ---
 
 /**
  * Funzione principale per caricare i dati meteo, aggiornare l'UI e disegnare il grafico.
@@ -289,15 +299,19 @@ window.initData = async (location = null) => {
         const utcOffsetSeconds = allData.utc_offset_seconds;
         
         if (hourlyData && utcOffsetSeconds !== undefined) {
-            // Usa la funzione LOCALE appena definita
+            // Usa la funzione LOCALE con la logica ora locale corretta
             drawPrecipitationChartLocal(hourlyData, utcOffsetSeconds, 'precipitationChartContainer');
         } 
         // ----------------------------------------
 
         // 4. AGGIORNAMENTO UI HEADER
-        const date = new Date(allData.timestamp);
-        if (lastUpdate) lastUpdate.textContent = `Aggiornato il ${date.toLocaleDateString('it-IT')} alle ${date.toLocaleTimeString('it-IT')}.`;
+        // Mantiene la visualizzazione dell'ora di aggiornamento nel fuso orario della città.
+        const updateTimestampUtc = allData.timestamp; 
+        const dateForCityLocalTime = new Date(updateTimestampUtc + utcOffsetSeconds * 1000); // Tempo locale corretto
+        
+        if (lastUpdate) lastUpdate.textContent = `Aggiornato il ${dateForCityLocalTime.toLocaleDateString('it-IT')} alle ${dateForCityLocalTime.toLocaleTimeString('it-IT')}.`;
         if (locationName) locationName.textContent = `${cityName}`;
+        updateCelestialTable();
 
         // 5. Ritorna al display del messaggio dopo il successo
         toggleSearchDisplay(false); 
@@ -310,7 +324,7 @@ window.initData = async (location = null) => {
 };
 
 
-// --- 4. BLOCCO DOMContentLoaded (Gestione Eventi) ---
+// --- 4. BLOCCO DOMContentLoaded (Gestione Eventi) (INVARIATO) ---
 
 document.addEventListener('DOMContentLoaded', () => {
 
