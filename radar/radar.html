@@ -14,14 +14,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-            #container-pressione, #container-solare, #container-vento, #container-umidita, #container-pioggia{
-            height: 250px; 
-            border: 1px solid #444;
-            background-color: #292933;
-            box-shadow: 0 0 40px rgb(0 129 255);
-        }
-        
-        body { margin-top: 65px; } /* Aggiusta il margine se hai un header fisso */
+                    
+body { margin-top: 65px; } /* Aggiusta il margine se hai un header fisso */
         
 /* Contenitore Responsive per l'Iframe (IMPOSTAZIONI BASE E PC) */
 .iframe-responsive-wrapper {
@@ -64,7 +58,11 @@
     }
 }
 
-table { width: 90%; border-collapse: collapse; margin: 20px auto; }
+
+
+		table { width: 100% !important; 
+				border-collapse: collapse !important; 
+				margin: 20px auto !important; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background-color: #333; color: white; }
         .sole { background-color: #74704b; } /* Giallo chiaro */
@@ -134,10 +132,10 @@ table { width: 90%; border-collapse: collapse; margin: 20px auto; }
 <div id="precipitationChartContainer" style="width: 100%; height: 200px;"></div>
       
       
-      <h1 id="titoloTabella">Caricamento dati celesti...</h1>
+      <h3 id="titoloTabella">Caricamento dati celesti...</h3>
     
     
-
+<div class="table-container">
     <table>
         <thead>
             <tr>
@@ -155,7 +153,7 @@ table { width: 90%; border-collapse: collapse; margin: 20px auto; }
 
     <p class="nota">I dati sono relativi alle coordinate: Caricamento in corso...</p>
       
-      
+      </div>
 </div>
      
     
