@@ -54,11 +54,44 @@ const calculateFavorability = (activity, dayData) => {
     const maxScore = 400; 
 
     switch (activity) {
-        case 'pesca':
-            score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20); 
-            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 60 : 20); 
-            score += (wind <= 5) ? 100 : (wind <= 10 ? 60 : 20); 
-            score += 100; // Umidità neutra
+    
+    case 'studiare':
+            // Ideale: Temperatura mite/fresca per concentrazione, no pioggia/vento (anche se attività indoor, il meteo può influenzare l'umore/il comfort)
+            score += (temp >= 15 && temp <= 22) ? 100 : (temp >= 10 && temp <= 25 ? 60 : 20);
+            score += (humidity <= 60) ? 100 : (humidity <= 75 ? 60 : 20);
+            score += (precipProb <= 10) ? 100 : (precipProb <= 20 ? 50 : 10);
+            score += (wind <= 20) ? 100 : (wind <= 30 ? 60 : 20);
+            break;
+
+        case 'arieggiare':
+            // Ideale: Temperatura non troppo fredda/calda, poco vento (per non raffreddare troppo la casa), no pioggia.
+            score += (temp >= 10 && temp <= 28) ? 100 : (temp >= 5 && temp <= 32 ? 60 : 20);
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10);
+            score += (wind <= 15) ? 100 : (wind <= 25 ? 60 : 20);
+            score += (humidity <= 70) ? 100 : (humidity <= 80 ? 60 : 20);
+            break;
+
+        case 'asciugare':
+            // Ideale: Alta temperatura, bassa umidità, vento (per asciugare il bucato all'aperto), no pioggia.
+            score += (temp >= 20) ? 100 : (temp >= 15 ? 60 : 20);
+            score += (humidity <= 50) ? 100 : (humidity <= 70 ? 60 : 20);
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 20 : 0); // La pioggia rende impossibile l'asciugatura
+            score += (wind >= 10 && wind <= 25) ? 100 : (wind < 10 && wind > 35 ? 60 : 20);
+            break;
+
+        case 'innaffiare':
+            // Ideale: Nessuna pioggia, temperatura alta/media (quando serve irrigare), poco vento.
+            score += (temp >= 20) ? 100 : (temp >= 15 ? 60 : 20);
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10);
+            score += (wind <= 15) ? 100 : (wind <= 25 ? 60 : 20);
+            score += (humidity <= 70) ? 100 : (humidity <= 80 ? 60 : 20);
+            break;
+
+        case 'lavaggio_macchina':
+            score += (temp >= 10 && temp <= 25) ? 100 : (temp >= 5 && temp <= 30 ? 60 : 20);
+            score += (precipProb === 0) ? 100 : (precipProb <= 5 ? 50 : 10);
+            score += (wind <= 10) ? 100 : (wind <= 20 ? 60 : 20);
+            score += (humidity <= 60) ? 100 : (humidity <= 75 ? 60 : 20);
             break;
             
         case 'escursione':
@@ -244,10 +277,14 @@ const ensureUIInitialized = () => {
             <div class="sport-menu-container" id="sport-select-container" style="margin-top: 20px; text-align: center;">
                 <label for="sport-select" style="font-weight: bold;">Seleziona Attività:</label>
                 <select id="sport-select" class="custom-select" style="padding: 5px; border-radius: 5px;">
-                    <option value="pesca">🎣 Pesca</option>
                     <option value="escursione">🚶 Escursione</option>
+                    <option value="lavaggio_macchina">🧼 Lavaggio Macchina</option>
                     <option value="guida">🚗 Guida</option>
                     <option value="sfalcio_erba">🌾 Sfalcio Erba</option>
+                    <option value="studiare">📚 Studiare</option>
+                    <option value="arieggiare">🏠 Arieggiare</option>
+                    <option value="asciugare">🧺 Asciugare</option>
+                    <option value="innaffiare">🪴 Innaffiare</option>
                 </select>
             </div>
             <div id="sport-table-container"></div>
