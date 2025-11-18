@@ -21,7 +21,7 @@ const createIconTag = (iconNumber, altText = 'Icona Meteo') => {
 };
 
 const getIconNumberFromData = (precipitation, cloudCover, windSpeed, precipProb, temperature_2m) => {
-    // ... (Logica omessa per brevità) ...
+    
     if (precipitation >= 0.1 && temperature_2m < 1) { return 13; }
     if (precipProb >= 70 && windSpeed >= 30) { return 8; }
     if (precipitation >= 5.0) { return 7; }
@@ -64,14 +64,75 @@ export const getWeatherDescription = (weatherCode) => {
     // ... (Logica omessa per brevità) ...
     return "variabile"; 
 };
-export const getPrecipitationDescription = (sumPrecipitation) => { 
-    // ... (Logica omessa per brevità) ...
-    return "assenti";
+export const getPrecipitationDescription = (sumPrecipitation) => {
+      
+    if (sumPrecipitation === 0) {
+        return "assenti";
+    }
+    // Pioggia molto leggera o tracce
+    if (sumPrecipitation > 0 && sumPrecipitation < 0.5) {
+        return "tracce";
+    }
+    // Pioggia leggera
+    if (sumPrecipitation >= 0.5 && sumPrecipitation < 5) {
+        return "leggere";
+    }
+    // Pioggia moderata
+    if (sumPrecipitation >= 5 && sumPrecipitation < 20) {
+        return "moderate";
+    }
+    // Pioggia forte
+    if (sumPrecipitation >= 20 && sumPrecipitation < 50) {
+        return "forti";
+    }
+
+    // Pioggia molto forte o estrema
+    if (sumPrecipitation >= 50) {
+        return "estreme";
+    }
+    // Fallback (se il valore è negativo o non gestito)
+    return "assenti"; 
 };
-export const getWindDescription = (windSpeed) => { 
-    // ... (Logica omessa per brevità) ...
-    return "moderato";
+
+
+export const getWindDescription = (windSpeed) => {
+    // windSpeed è la velocità del vento in km/h (chilometri orari)
+
+    // Vento assente (Calma) - Scala Beaufort 0
+    if (windSpeed < 1) {
+        return "calma";
+    }
+
+    // Vento leggerissimo (Brezza leggera) - Beaufort 1-2
+    if (windSpeed >= 1 && windSpeed < 12) {
+        return "leggero";
+    }
+
+    // Vento moderato (Brezza moderata) - Beaufort 3-4
+    if (windSpeed >= 12 && windSpeed < 30) {
+        return "moderato";
+    }
+
+    // Vento forte (Vento teso) - Beaufort 5-6
+    if (windSpeed >= 30 && windSpeed < 50) {
+        return "teso";
+    }
+
+    // Vento molto forte (Burrasca) - Beaufort 7-9
+    if (windSpeed >= 50 && windSpeed < 88) {
+        return "forte";
+    }
+
+    // Vento tempestoso (Tempesta/Uragano) - Beaufort 10+
+    if (windSpeed >= 88) {
+        return "estremo";
+    }
+
+    // Fallback 
+    return "debole";
 };
+
+
 
 // --- FUNZIONI DI RICERCA CITTÀ (GEOCODIFICA) ---
 
