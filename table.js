@@ -336,7 +336,7 @@ const renderCurrentWeatherCard = (allData, currentTimeIndex) => {
 
     const maxTemp = getMaxMin(dailyData.temperature_2m_max, 0);
     const minTemp = getMaxMin(dailyData.temperature_2m_min, 0);
-    const precipitationSum = dailyData.precipitation_sum.length > 0 ? dailyData.precipitation_sum[0] : 0; 
+    const precipitationSum = (dailyData.precipitation_sum.length > 0 ? dailyData.precipitation_sum[0] : 0).toFixed(1); 
     const maxDailyWindSpeed = dailyData.wind_speed_10m_max.length > 0 ? dailyData.wind_speed_10m_max[0] : 0;
 
     const numericMax = typeof dailyData.temperature_2m_max[0] === 'number';
@@ -510,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const numericMin = typeof dailyData.temperature_2m_min[index] === 'number';
             const avgTemp = (numericMax && numericMin) ? (maxTemp + minTemp) / 2 : 0;
             
-            const displaySumPrecipitation = Math.round(sumPrecipitation);
+            const displaySumPrecipitation = Number(sumPrecipitation).toFixed(1);
             const precipitationEmoji = precipitationEmojiMap(displaySumPrecipitation);
 
             const weatherDescription = getWeatherDescription(weatherCode); 
