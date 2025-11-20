@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala di Controllo Interattiva: Simulazione Esondazione</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Stile base e Tema Scuro (Dark Theme) */
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.5s; }
+
+        .dark-theme { background-color: #0c121e; }
+        .dark-theme .main-container {
+            background-color: #1a202c; 
+            border-color: #3f4a59;
+            color: #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .dark-theme .main-container h1, .dark-theme .main-container p { color: #cbd5e1; }
+        .dark-theme .axis-x line, .dark-theme .axis-x path, 
+        .dark-theme .axis-y line, .dark-theme .axis-y path { stroke: #475569; }
+        .dark-theme .axis-x text, .dark-theme .axis-y text { fill: #94a3b8; }
+        .dark-theme .info-card {
+            background-color: #2c3546; 
+            border-color: #3f4a59;
+        }
+        .alert-red {
+             box-shadow: 0 0 10px rgba(239, 68, 68, 0.8), 0 0 20px rgba(239, 68, 68, 0.4);
+             animation: pulse-red 1s infinite alternate;
+        }
+        @keyframes pulse-red {
+            from { opacity: 0.9; }
+            to { opacity: 1; }
+        }
+        .sim-input {
+            background-color: #1e293b;
+            color: #e5e7eb;
+            border-color: #475569;
+        }
+        /* NUOVI STILI PER MOBILE: assicurano leggibilità */
+        @media (max-width: 1023px) {
+             .main-container {
+                padding: 1rem; /* Riduzione padding */
+             }
+             header h1 {
+                font-size: 1.5rem; /* Dimensione H1 ridotta */
+             }
+             .sim-input {
+                font-size: 1rem; /* Font più piccolo per l'input */
+             }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+
+<body class="p-4 sm:p-8 min-h-screen flex items-center justify-center dark-theme">
+
+<div class="w-full max-w-7xl shadow-2xl rounded-xl p-4 md:p-10 transition duration-500 ease-in-out main-container">
+    <header class="mb-4 border-b border-gray-700 pb-3 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl lg:text-3xl font-extrabold text-red-500 mb-1 tracking-wider">P. CIVILE DASHBOARD</h1>
+            <p class="text-gray-400 text-xs sm:text-sm">Simulazione Interattiva - Fiume 'A'</p>
+        </div>
+        <div class="text-lg sm:text-xl font-bold text-yellow-500">
+            Ora: <span id="current-hour-display">0</span>
+        </div>
+    </header>
+
+    <div id="alert-system" class="p-3 mb-4 rounded-lg shadow-2xl text-center font-bold transition duration-300 ease-in-out border-2">
+        <span class="flex items-center justify-center space-x-3">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+            <span id="alert-message" class="text-sm sm:text-lg">Stato Attuale: Livello Fiume Stabile.</span>
+        </span>
+    </div>
+    <div class="flex flex-col lg:grid lg:grid-cols-3 gap-6">
+
+        <div class="lg:col-span-2 order-2 lg:order-1">
+            <h2 class="text-lg sm:text-xl font-semibold mb-2 text-gray-300">📈 Idrogramma Orario (Ultimi 48 Periodi)</h2>
+            <div class="overflow-x-auto rounded-lg border border-gray-700 shadow-inner">
+                <div id="chart-container" class="w-full h-96 bg-gray-900 p-1" style="min-width: 500px;"> 
+                    <svg id="hydrograph-chart" class="w-full h-full"></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1 flex flex-col gap-6 order-1 lg:order-2">
+            
+            <div class="info-card rounded-lg p-4 border shadow-xl border-blue-500">
+                <h3 class="text-lg font-bold mb-2 text-blue-400">INPUT SIMULAZIONE 🌧️</h3>
+                <p class="text-gray-400 mb-3 text-xs">Decidi la pioggia $(\text{mm})$ per la prossima ora.</p>
+                
+                <div class="flex items-center space-x-3">
+                    <input type="number" id="rainfall-input" value="0" min="0" max="50" class="sim-input w-24 p-2 rounded-lg text-base font-bold border" placeholder="mm">
+                    <button id="simulate-button" class="flex-grow bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg transition duration-200 shadow-md text-sm">
+                        Simula Prossima Ora
+                    </button>
+                </div>
+            </div>
+
+            <div id="info-card-details" class="info-card rounded-lg p-4 border shadow-xl transition duration-500 flex flex-col justify-between flex-grow">
+                <div>
+                    <div class="mb-3 pb-2 border-b border-gray-600">
+                        <p class="text-xs text-gray-400 font-medium">Situazione Corrente:</p>
+                        <p id="card-description" class="text-base font-bold text-yellow-300"></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="text-xs text-gray-400 font-medium">Zone di Evacuazione:</p>
+                        <p id="card-zones" class="text-sm font-semibold text-gray-300"></p>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-gray-600">
+                    <p class="text-xs text-gray-400 font-medium">Popolazione Coinvolta Stimata (persone):</p>
+                    <p id="card-population" class="text-xl font-extrabold text-red-400"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip" class="absolute bg-gray-900 text-white text-xs p-2 rounded-lg shadow-xl opacity-0 pointer-events-none transition duration-150 ease-in-out"></div>
+</div>
+
+<script>
+    // Configurazione del grafico
+    const margin = { top: 40, right: 60, bottom: 80, left: 60 };
+    const chartContainer = document.getElementById('chart-container');
+    const svg = d3.select("#hydrograph-chart");
+    const tooltip = d3.select("#tooltip");
+    const alertSystem = d3.select("#alert-system");
+    const alertMessage = d3.select("#alert-message");
+    const infoCard = d3.select("#info-card-details");
+    const cardDescription = d3.select("#card-description");
+    const cardZones = d3.select("#card-zones");
+    const cardPopulation = d3.select("#card-population");
+    const rainfallInput = document.getElementById('rainfall-input');
+    const simulateButton = document.getElementById('simulate-button');
+    const currentHourDisplay = d3.select("#current-hour-display");
+
+    // LIVELLI DI ALLERTA (in metri)
+    const CRITICAL_LEVEL = 4.5;
+    const ATTENTION_LEVEL = 4.0;
+    const PRE_ALERT_LEVEL = 3.5;
+    const BASE_LEVEL = 2.5;
+    const MAX_HOURS = 48; // Visualizza le ultime 48 ore
+
+    let currentSimulationData = [];
+    let currentHour = 0;
+
+    // Funzione per generare i dati iniziali (48 ore di calma)
+    function generateInitialData() {
+        const data = [];
+        for (let i = 0; i < MAX_HOURS; i++) {
+            const date = d3.timeHour.offset(new Date(2025, 0, 1), i);
+            data.push({
+                date: date,
+                rainfall: 0.0, 
+                river_level: BASE_LEVEL
+            });
+        }
+        return data;
+    }
+
+    // Funzione per aggiornare il sistema di allerta e le Card
+    function updateAlertAndTheme() {
+        const recentData = currentSimulationData.slice(-24);
+        const maxRiverLevel = d3.max(recentData, d => d.river_level);
+
+        let alertState = "VERDE";
+        let alertClass = "bg-green-800 border-green-600 text-green-200";
+        let alertText = "Livello Fiume Stabile. Nessun Rischio.";
+        let cardDesc = "Condizioni idrauliche nella norma. La situazione non richiede interventi operativi urgenti.";
+        let cardPop = "0";
+        let cardZone = "Nessuna area interessata.";
+        let cardColor = "text-green-300";
+        let cardBorderClass = "border-green-600";
+        let populationColor = "text-green-400";
+        
+        infoCard.classed("alert-red", false); 
+
+        if (maxRiverLevel >= CRITICAL_LEVEL) {
+            alertState = "ROSSO";
+            alertClass = "bg-red-900 border-red-500 text-red-200 alert-red"; 
+            alertText = "⚠️ ALLARME ROSSO! ESONDAZIONE IN ATTO o IMMINENTE.";
+            cardDesc = "🚨 **MASSIMA EMERGENZA!** Inondazione in corso. Avvio immediato delle procedure di salvataggio e evacuazione rapida.";
+            cardPop = "> 8.500";
+            cardZone = "Zone A (Golena), B (Porto), C (Via del Fiume).";
+            cardColor = "text-red-400";
+            cardBorderClass = "border-red-500";
+            populationColor = "text-red-400";
+            infoCard.classed("alert-red", true); 
+        } else if (maxRiverLevel >= ATTENTION_LEVEL) {
+            alertState = "ARANCIONE";
+            alertClass = "bg-orange-800 border-orange-500 text-orange-200";
+            alertText = "🔥 ALLERTA ARANCIONE. Rischio Piena. Prepararsi all'Evacuazione.";
+            cardDesc = "**ALLERTA FORTE.** Livello in rapida crescita. Attivazione Piani di Evacuazione (Fase Preliminare) e chiusura ponti minori.";
+            cardPop = "1.200 - 3.500";
+            cardZone = "Zone A (Golena), B (Porto).";
+            cardColor = "text-orange-400";
+            cardBorderClass = "border-orange-500";
+            populationColor = "text-orange-400";
+        } else if (maxRiverLevel >= PRE_ALERT_LEVEL) {
+            alertState = "GIALLO";
+            alertClass = "bg-yellow-700 border-yellow-400 text-yellow-100";
+            alertText = "🟡 PRE-ALLARME GIALLO. Attenzione: Livello Alto. Monitoraggio in Corso.";
+            cardDesc = "**PRE-ALLERTA.** Livello sopra la soglia di attenzione. Mobilitazione squadre, monitoraggio continuo e preavviso alla popolazione.";
+            cardPop = "0 - 500";
+            cardZone = "Zona A (Area Golena).";
+            cardColor = "text-yellow-400";
+            cardBorderClass = "border-yellow-400";
+            populationColor = "text-yellow-400";
+        } 
+        
+        // Aggiorna Alert
+        alertSystem
+            .attr("class", `p-3 sm:p-4 mb-4 rounded-lg shadow-2xl text-center font-bold transition duration-300 ease-in-out border-2 ${alertClass}`);
+        alertMessage.html(`Stato Attuale (${alertState}): ${alertText}`);
+
+        // Aggiorna Card Dettagli
+        infoCard.attr("class", `info-card rounded-lg p-4 border shadow-xl transition duration-500 flex flex-col justify-between flex-grow ${cardBorderClass}`);
+        cardDescription.html(cardDesc).attr("class", `text-base font-bold ${cardColor}`);
+        cardZones.html(cardZone);
+        cardPopulation.html(cardPop).attr("class", `text-xl font-extrabold ${populationColor}`);
+
+    }
+
+
+    // ------------------------------------------------------------------
+    // FUNZIONE CHIAVE: SIMULA LA PROSSIMA ORA
+    // ------------------------------------------------------------------
+    function simulateNextHour(newRainfall) {
+        
+        currentHour++;
+        currentHourDisplay.text(currentHour);
+
+        const lastData = currentSimulationData[currentSimulationData.length - 1];
+        const lastLevel = lastData ? lastData.river_level : BASE_LEVEL;
+        const newDate = d3.timeHour.offset(lastData ? lastData.date : new Date(2025, 0, 1), 1);
+
+        let currentLevel = lastLevel;
+        
+        // Decay (coefficiente di discesa)
+        currentLevel *= 0.98; 
+
+        // Impatto della pioggia attuale 
+        let rainImpact = newRainfall * 0.15;
+        if (newRainfall > 15) rainImpact = newRainfall * 0.25; 
+
+        currentLevel += rainImpact;
+
+        // Effetto di ritardo (lag) 
+        if (currentSimulationData.length >= 2 && currentSimulationData[currentSimulationData.length - 2].rainfall > 5) {
+            currentLevel += currentSimulationData[currentSimulationData.length - 2].rainfall * 0.05; 
+        }
+
+        // Clamp 
+        currentLevel = Math.max(BASE_LEVEL, Math.min(5.5, currentLevel)); 
+        currentLevel = Math.round(currentLevel * 100) / 100;
+        
+        // Aggiungi il nuovo punto dati
+        currentSimulationData.push({
+            date: newDate,
+            rainfall: newRainfall,
+            river_level: currentLevel
+        });
+
+        // Mantiene solo le ultime MAX_HOURS 
+        if (currentSimulationData.length > MAX_HOURS) {
+            currentSimulationData.shift(); 
+        }
+
+        // Rirendizza Grafico e Aggiorna Allerta
+        renderChart();
+        updateAlertAndTheme();
+
+        // Resetta l'input per la prossima simulazione
+        rainfallInput.value = 0;
+    }
+
+
+    // ------------------------------------------------------------------
+    // GESTIONE EVENTI (Click)
+    // ------------------------------------------------------------------
+    simulateButton.addEventListener('click', () => {
+        const inputVal = parseFloat(rainfallInput.value);
+        const newRainfall = isNaN(inputVal) || inputVal < 0 ? 0 : inputVal;
+        
+        simulateNextHour(newRainfall);
+    });
+
+
+    // ------------------------------------------------------------------
+    // FUNZIONE DI RENDERING GRAFICO
+    // ------------------------------------------------------------------
+    function renderChart() {
+        const dataToRender = currentSimulationData; 
+        
+        // Importante: le dimensioni del grafico sono ora basate sul min-width per mobile.
+        const width = chartContainer.clientWidth - margin.left - margin.right;
+        const height = chartContainer.clientHeight - margin.top - margin.bottom;
+
+        svg.selectAll("*").remove();
+
+        const g = svg.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // 1. Definisci Scale 
+        const x = d3.scaleTime()
+            .domain(d3.extent(dataToRender, d => d.date))
+            .range([0, width]);
+
+        const y1DomainMax = Math.max(d3.max(dataToRender, d => d.river_level) + 0.5, CRITICAL_LEVEL + 0.2);
+        const y1 = d3.scaleLinear()
+            .domain([d3.min(dataToRender, d => d.river_level) - 0.1, y1DomainMax])
+            .range([height, 0]);
+
+        const y2 = d3.scaleLinear()
+            .domain([0, d3.max(dataToRender, d => d.rainfall) + 5])
+            .range([height, 0]);
+
+        // 2. Aggiungi Assi (formato ora: hh:mm)
+        g.append("g")
+            .attr("class", "axis-x")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x).ticks(d3.timeHour.every(6)).tickFormat(d3.timeFormat("%H:%M")))
+            .selectAll("text")
+                .attr("transform", "translate(0, 10)") 
+                .style("text-anchor", "middle"); 
+
+        g.append("text")
+            .attr("class", "text-sm font-semibold fill-slate-400")
+            .attr("transform", `translate(${width / 2}, ${height + margin.bottom - 10})`)
+            .style("text-anchor", "middle")
+            .text("Ora di Simulazione");
+
+        // Assi Y1 e Y2
+        g.append("g")
+            .attr("class", "axis-y axis-y1")
+            .call(d3.axisLeft(y1).ticks(5).tickFormat(d => `${d} m`))
+            .append("text")
+                .attr("fill", "#60a5fa") 
+                .attr("transform", "rotate(-90)")
+                .attr("y", -margin.left + 10)
+                .attr("dy", "0.71em")
+                .attr("text-anchor", "end")
+                .attr("class", "text-sm font-semibold")
+                .text("Livello Fiume (m)");
+
+        g.append("g")
+            .attr("class", "axis-y axis-y2")
+            .attr("transform", `translate(${width}, 0)`)
+            .call(d3.axisRight(y2).ticks(5).tickFormat(d => `${d} mm`))
+            .append("text")
+                .attr("fill", "#9ca3af")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 40)
+                .attr("dy", "0.71em")
+                .attr("text-anchor", "end")
+                .attr("class", "text-sm font-semibold")
+                .text("Pioggia (mm)");
+
+
+        // Linea di Livello Critico
+        g.append("line")
+            .attr("x1", 0).attr("x2", width)
+            .attr("y1", y1(CRITICAL_LEVEL)).attr("y2", y1(CRITICAL_LEVEL))
+            .attr("stroke", "#ef4444") 
+            .attr("stroke-width", 2).attr("stroke-dasharray", "8, 4");
+        g.append("text")
+            .attr("x", width - 5).attr("y", y1(CRITICAL_LEVEL) - 5)
+            .attr("text-anchor", "end").attr("fill", "#ef4444")
+            .attr("font-size", "12px").attr("font-weight", "bold")
+            .text(`Livello Critico (${CRITICAL_LEVEL} m)`);
+
+
+        // 3. Disegna Dati
+        // --- Pioggia (Barre) ---
+        const barWidth = width / dataToRender.length * 0.8;
+        g.selectAll(".bar")
+            .data(dataToRender)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.date) - barWidth / 2)
+            .attr("y", d => y2(d.rainfall))
+            .attr("width", barWidth)
+            .attr("height", d => height - y2(d.rainfall))
+            .attr("fill", "#4b5563") 
+            .attr("rx", 3); 
+
+        // --- Livello Fiume (Linea) ---
+        const riverLine = d3.line()
+            .x(d => x(d.date))
+            .y(d => y1(d.river_level))
+            .curve(d3.curveMonotoneX); 
+
+        g.append("path")
+            .datum(dataToRender)
+            .attr("class", "river-line")
+            .attr("fill", "none")
+            .attr("stroke", "#60a5fa") 
+            .attr("stroke-width", 3)
+            .attr("d", riverLine);
+
+        // --- Punti dati Livello Fiume ---
+        g.selectAll(".dot")
+            .data(dataToRender)
+            .enter().append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => x(d.date))
+            .attr("cy", d => y1(d.river_level))
+            .attr("r", 4)
+            .attr("fill", d => d.river_level >= CRITICAL_LEVEL ? "#ef4444" : "#60a5fa") 
+            .attr("stroke", "#1f2937") 
+            .attr("stroke-width", 1.5)
+            // Aggiungi interattività dinamica per l'ultima ora
+            .filter((d, i) => i === dataToRender.length - 1)
+            .attr("r", 6)
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 3);
+
+        // 4. Interattività (Tooltip e Overlay)
+        const dateFormat = d3.timeFormat("%A %d %B - %H:%M");
+        const bisectDate = d3.bisector(d => d.date).left;
+
+        const overlay = g.append("rect")
+            .attr("class", "overlay")
+            .attr("width", width)
+            .attr("height", height)
+            .style("fill", "none")
+            .style("pointer-events", "all")
+            .on("mouseover", () => {
+                focusLine.style("opacity", 1);
+                focusCircleRiver.style("opacity", 1);
+                tooltip.style("opacity", 1);
+            })
+            .on("mouseout", () => {
+                focusLine.style("opacity", 0);
+                focusCircleRiver.style("opacity", 0);
+                tooltip.style("opacity", 0);
+            })
+            .on("mousemove", mousemove);
+
+        const focusLine = g.append("line")
+            .attr("class", "focus-line")
+            .attr("stroke", "#f87171") 
+            .attr("stroke-width", 1.5)
+            .attr("stroke-dasharray", "4, 2")
+            .style("opacity", 0);
+
+        const focusCircleRiver = g.append("circle")
+            .attr("class", "focus-circle-river")
+            .attr("r", 6)
+            .attr("fill", "#60a5fa")
+            .attr("stroke", "#1f2937")
+            .attr("stroke-width", 2)
+            .style("opacity", 0);
+
+
+        function mousemove(event) {
+            const x0 = x.invert(d3.pointer(event)[0]);
+            const i = bisectDate(dataToRender, x0, 1);
+            const d0 = dataToRender[i - 1];
+            const d1 = dataToRender[i];
+            const d = d0 && (!d1 || x0 - d0.date > d1.date - x0) ? d1 : d0;
+            
+            if (!d) return;
+
+            focusLine.attr("x1", x(d.date)).attr("x2", x(d.date)).attr("y1", 0).attr("y2", height);
+            focusCircleRiver
+                .attr("cx", x(d.date))
+                .attr("cy", y1(d.river_level))
+                .attr("fill", d.river_level >= CRITICAL_LEVEL ? "#ef4444" : "#60a5fa");
+            
+            const htmlContent = `
+                <p class="font-bold mb-1">${dateFormat(d.date)}</p>
+                <p class="text-blue-300">Fiume: ${d.river_level} m</p>
+                <p class="text-gray-300">Pioggia: ${d.rainfall} mm</p>
+            `;
+
+            tooltip.html(htmlContent)
+                .style("left", `${event.pageX + 15}px`)
+                .style("top", `${event.pageY - 40}px`);
+        }
+    }
+
+
+    // Esecuzione Iniziale
+    window.onload = function() {
+        currentSimulationData = generateInitialData();
+        currentHour = MAX_HOURS; 
+        currentHourDisplay.text(currentHour);
+        renderChart();
+        updateAlertAndTheme(); 
+    }
+    window.addEventListener('resize', renderChart);
+
+</script>
+</body>
+</html>

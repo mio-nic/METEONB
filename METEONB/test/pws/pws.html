@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="icon" type="image/x-icon" href="/METEONB/favicon.ico">
+    <link rel="stylesheet" href="/METEONB/style.css">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="dark-theme">
+    <div class="container">
+        <div class="title-container" id="titleContainer">
+            <h1>MeteoNB</h1>
+            
+        </div>
+        <p class="subtitle">Dati dalla Stazione Personale (PWS)</p>
+        <div class="subtitle-divider"></div>
+       <div class="gauge-container">
+       </div>        
+        <div class="chart-container"> <div id="chart-temp" class="chart"></div>
+            <div id="chart-wind" class="chart"></div>
+            <div id="chart-pressure" class="chart"></div>
+            <div id="chart-rain" class="chart"></div>
+            <div id="chart-solar" class="chart"></div>
+        </div>
+    
+</div>
+    <div class="bottom-nav">
+        <a href="/METEONB/index.html" class="nav-button">
+            <i class="fas fa-home"></i>
+            <span>HOME</span>
+        </a>
+        <a href="/METEONB/pws/pws.html" class="nav-button active">
+            <i class="fas fa-database"></i>
+            <span>DATI</span>
+        </a>
+        <a href="/METEONB/pre/pre.html" class="nav-button">
+            <i class="fas fa-satellite-dish"></i>
+            <span>ALLERTA</span>
+        </a>
+        <a href="/METEONB/altro/altro.html" class="nav-button">
+            <i class="fas fa-ellipsis-h"></i>
+            <span>ALTRO</span>
+        </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <script src="gauge.js"></script> 
+    <script src="pws.js"></script>
+    
+    
+</body>
+</html>

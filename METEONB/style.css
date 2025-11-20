@@ -1,0 +1,943 @@
+/*
+=================================================
+  1. VARIABILI E STILI BASE (DEFAULT / DESKTOP)
+=================================================
+*/
+
+:root {
+    /* Variabili Globali e del Tema Scuro */
+    --primary-color: #42a1ff;
+    --background-color: #000000;
+    --container-bg-color: #000000;
+    --text-color: #ffffff;
+    --secondary-text-color: #bdc3c7;
+    --border-color: #4f4f4f;
+    --button-bg-color: #3498db;
+    --button-hover-color: #2980b9;
+    --table-header-bg: var(--container-bg-color);
+    --table-row-even-bg: #303030;
+    --table-row-odd-bg: #1f1f1f;
+    --chart-bg-color: rgba(30, 30, 30, 1);
+    --chart-text-color: #ffffff;
+    --chart-grid-color: var(--border-color);
+    --temp-historical-color: #FF6384;
+    --temp-forecast-color: #9b59b6;
+    --temp-forecast-1h-color: #DA70D6;
+    --temp-forecast-24h-color: #90EE90;
+    --title-color-default: var(--primary-color);
+    --title-color-active: #FFD700;
+    --nav-height: 64px;
+    --nav-bottom-height: 64px;
+    --scroll-bar-height: 30px;
+    /* Variabile per altezza scroll bar mobile */
+    --scroll-bar-height-mobile: 40px; 
+}
+
+/* Stili Globali */
+html, body {
+    max-width: 100%;
+    -webkit-user-select: none;  /* Chrome, Safari, Opera */
+    -moz-user-select: none;     /* Firefox */
+    -ms-user-select: none;      /* IE/Edge */
+    user-select: none;          /* Standard */
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.5s ease, color 0.5s ease;
+    box-sizing: border-box;
+}
+
+/*
+--- 1.1 ANIMAZIONI & KEYFRAMES ---
+*/
+
+/* Animazione per la barra di notifica scorrevole (Top Bar) */
+@keyframes scroll-text {
+    to { transform: translateX(-100%); }
+}
+
+/* Animazione di Pulsazione per i pallini di stato "Live" */
+@keyframes pulse-color {
+    0% {
+        transform: scale(0.9);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+        opacity: 1;
+    }
+}
+
+
+
+/*
+--- 1.2 CONTAINER E ADATTAMENTO PADDING (PC Default) ---
+*/
+
+.container {
+    background-color: var(--container-bg-color);
+    /* Padding di base ridotto per pagine SENZA header fissi */
+    padding-top: 0px; 
+    padding-bottom: calc(var(--nav-bottom-height) + 60px); 
+    padding-left: 0;
+    padding-right: 0;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(66, 161, 255, 0.1);
+    max-width: 980px;
+    width: 100%;
+    text-align: center;
+    transition: all 0.3s ease-in-out;
+    margin: 0 auto;
+    box-sizing: border-box;
+    
+
+}
+
+/* Sovrascrittura PADDING per pagine CON header fissi (Desktop) */
+body.page-with-fixed-header .container {
+    /* Padding calcolato per compensare tutte le barre fisse: ~170px */
+    padding-top: 10px;
+}
+
+/* Padding per i contenitori interni */
+.title-container,
+.header-controls,
+.chart-container,
+.table-container {
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0 auto;
+}
+
+
+
+/* --- 2. HEADER DI STATO (Contenitore Esterno) --- */
+.status-header {
+    position: fixed;
+    top: 0px;
+    left: 0;
+    right: 0;
+    background-color: var(--chart-bg-color); /* Sfondo scuro per l'header */
+    padding: 0;
+    z-index: 1200;
+    box-shadow: 0 0 20px rgb(0 105 208); /* Ombra più pronunciata per staccare */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --- 3. CONTENITORE TOP (Barra Fisica) --- */
+.header-content-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Aumentiamo il padding verticale per ingrandire l'intera barra */
+    padding: 10px 15px; 
+    background-color: var(--search-bar-bg-default); /* Sfondo BARRA: COLORE PRIMARIO */
+    width: 100%;
+    /* Rimuoviamo il border-radius in basso per mantenere la linea pulita con il diviso */
+    border-radius: 0; 
+}
+
+/* Larghezza fissa per i pulsanti laterali */
+.menu-button, .menu-button-placeholder {
+    width: 48px; /* Leggermente più grandi */
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.menu-button i {
+    color: var(--text-color); 
+    font-size: 1.5em; /* Icona più grande */
+}
+
+/* --- 4. CONTENITORE CENTRALE (Search/Display) --- */
+.search-bar-container {
+    flex-grow: 1;    
+    max-width: 600px;    
+    margin: 0 10px;    
+    position: relative;
+    /* Aumentiamo l'altezza per ospitare l'input/display più grande */
+    height: 48px; 
+}
+
+/* --- 5. STILE DISPLAY MESSAGGIO (Stato Inattivo) --- */
+.location-display {
+    position: absolute;
+    top: 0;
+    left: 0;
+    
+    display: flex;
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center; /* Centra il blocco di testo verticalmente */
+    
+    height: 100%;
+    width: 100%;
+    color: var(--text-color);
+    font-size: 1.1em;
+    cursor: pointer;    
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 5px; 
+    border-radius: 5px; 
+}
+
+/* Contenitore per il testo e l'icona all'interno di location-display */
+.location-display > * {
+    margin: 0;
+    line-height: 1.2;
+}
+
+/* Stile per l'icona della lente d'ingrandimento */
+#searchIcon {
+    font-size: 0.9em; /* Leggermente più grande del testo */
+    opacity: 0.9;
+    /* Sposta l'icona a sinistra e centra il testo sotto */
+    position: absolute; 
+    right: 0px; /* Distanza dal bordo sinistro */
+    top: 30%;
+    transform: translateY(-50%);
+}
+
+#locationName {
+	font-size: 0.8em;
+    font-weight: 600;
+    /* Rimuoviamo il margine per evitare disallineamenti */
+    margin: 0; 
+    /* Aumentiamo il padding a sinistra se l'icona è sempre visibile */
+    padding-left: 25px; 
+    white-space: normal; 
+    text-align: center;
+}
+#lastUpdate {
+    font-size: 0.7em;
+    opacity: 0.9;
+    text-align: center;
+    padding-left: 25px; /* Aumentiamo il padding a sinistra */
+}
+/* --- 6. STILE INPUT DI RICERCA (Stato Attivo) --- */
+.main-search-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;    
+    height: 100%;
+    /* Padding uniforme per centrare il testo */
+    padding: 10px 45px 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--search-input-bg-active); /* Sfondo bianco/chiaro */
+    color: var(--search-input-text-active); /* Testo scuro */
+    font-size: 1.2em; /* Carattere più grande per la barra attiva */
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.main-search-input.hidden {
+    display: none !important;
+}
+
+.close-search-button {
+    position: absolute; /* Fondamentale per posizionarlo sopra l'input */
+    right: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: var(--search-input-text-active); /* Colore del testo scuro/input attivo */
+    font-size: 1.2em;
+    cursor: pointer;
+    z-index: 12; /* Leggermente superiore all'input */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: opacity 0.2s;
+}
+
+.close-search-button:hover {
+    opacity: 1;
+}
+
+.close-search-button.hidden {
+    display: none !important;
+}
+
+/* --- 7. DIVISORE (Sotto la barra, nello stile scuro) --- */
+.subtitle-divider {
+    height: 1px;
+    background-color: var(--border-color); /* Colore scuro per separazione */
+    margin-top: 0; 
+    width: 100%;
+}
+
+/* Stili per il datalist (Opzionale, ma consigliato) */
+#citySuggestions {
+    background-color: var(--chart-bg-color);
+    border: 1px solid var(--border-color);
+}
+#citySuggestions option {
+    background-color: var(--chart-bg-color);
+    color: var(--text-color);
+}
+
+/* 🟢 Stili dei Pallini di Stato Pulsanti */
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+    animation: pulse-color 1.5s infinite; /* <-- Applica l'animazione */
+}
+
+/* Colori in base allo stato */
+.dot-ottimo {
+    background-color: #28a745; /* Verde: Basso Rischio */
+    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+}
+
+.dot-buono {
+    background-color: #ffc107; /* Giallo: Rischio Moderato */
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+}
+
+.dot-allerta {
+    background-color: #ff8c00; /* Arancione: Alto Rischio */
+    box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.7);
+}
+
+.dot-discreto {
+    background-color: #dc3545; /* Rosso: Rischio Massimo */
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+}
+
+/* Animazione di Pulsazione "Live" (invariata) */
+@keyframes pulse-color {
+    0% {
+        transform: scale(0.9);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); 
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(0.9);
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+        opacity: 1;
+    }
+}
+
+/* Top Navigation Bar */
+.top-nav {
+    position: fixed;
+    top: 60px; /* Sotto Status Header */
+    left: 0;
+    right: 0;
+    height: var(--nav-height);
+    background-color: var(--chart-bg-color);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    gap: 6px;
+    z-index: 1200;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.top-nav .nav-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-color);
+    text-decoration: none;
+    cursor: pointer;
+    padding: 0px 0px;
+    min-width: 72px;
+    font-size: 12px;
+    background-color: transparent;
+    border: none;
+}
+.top-nav .nav-button i { font-size: 18px; }
+.top-nav .nav-button span { line-height: 1; }
+.top-nav .nav-button:hover { color: #a9d2ff; }
+
+
+/*
+--- 1.4 Stili Elementi Contenuto ---
+*/
+
+/* Titolo/Emoji (Animazione aggiornamento) */
+.title-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 0px 0px;
+    /*font-size: 11px;*/
+    padding: 10px;
+    
+}
+
+.title-container h {
+    color: #ffffff;
+    text-shadow: 0 0 5px #00bcd4, 0 0 10px #00bcd4;
+    margin: 0;
+    font-size: 2.5em;
+    transition: color 0.5s ease;
+}
+
+  h3 {
+  color: var(--primary-color); 
+  text-align: center; 
+  margin-bottom: 5px; 
+  font-size: 1.4em; 
+  text-shadow: 0 0 5px rgba(66, 161, 255, 0.4);
+}
+
+
+
+/* Tabelle */
+.table-container {
+    overflow-x: auto; 
+    padding: 0;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+    margin: 0 auto;
+}
+table {
+    table-layout: auto;
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 0 20px rgb(0 105 208)
+    color: var(--text-color);
+    margin-top: 15px;
+    margin-bottom: 15px;
+    font-size: 0.8em;
+    border-radius: 8px;
+    overflow: hidden;
+}
+th {
+    background-color: var(--table-header-bg);
+    color: var(--text-color);
+    text-transform: uppercase;
+    font-weight: bold;
+    border-bottom: 2px solid var(--primary-color);
+}
+td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+}
+tr:nth-child(even) { background-color: var(--table-row-even-bg); }
+tr:nth-child(odd) { background-color: var(--table-row-odd-bg); }
+tr:hover {
+    background-color: var(--border-color);
+    cursor: pointer;
+}
+#weatherTable td:nth-child(2), #hourlyTable td:nth-child(2) { font-size: 1.0em; }
+#hourlyTableContainer { margin-top: 12px; }
+
+/* Grafici */
+.chart-container {
+    margin-bottom: 10px;
+    margin: 20px, ;
+    background-color: var(--chart-bg-color);
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(66, 161, 255, 0.3);
+    box-shadow: 0 0 40px rgb(0 129 255);
+    height: 300px;
+    
+}
+.back-button {
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+    display: block;
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+.back-button:hover { background-color: #45a049; }
+
+---
+
+/*
+=================================================
+  2. MEDIA QUERY - OTTIMIZZAZIONE MOBILE 📱
+=================================================
+*/
+
+/* Applicato a schermi fino a 520px di larghezza */
+@media (max-width: 520px) {
+
+
+    /* --- Barre Fisse (Mobile) --- */
+
+    /* Scroll Bar */
+    .scrolling-bar {
+        height: var(--scroll-bar-height-mobile);
+        line-height: var(--scroll-bar-height-mobile);
+        font-size: 30px;
+    }
+
+    /* Status Header (Posizionato sotto la scroll bar mobile: 40px) */
+    .status-header {
+        top: var(--scroll-bar-height-mobile);
+        padding: 6px 8px;
+        height: auto;
+    }
+
+    /* Top Navigation (Posizionato sotto Status Header: ~110px) */
+    .top-nav {
+        top: 80px; 
+        height: auto;
+        flex-wrap: wrap; 
+        padding: 8px;
+        gap: 6px;
+    }
+    .top-nav .nav-button {
+        min-width: 48px;
+        padding: 6px;
+        font-size: 11px;
+    }
+
+    /* --- Contenuto Principale (Mobile) --- */
+    
+    /* Container (Mobile Default - Senza header fissi) */
+    .container {
+        padding-top: 40px;
+        max-width: 100%;
+        padding-left: 0;
+        padding-right: 0;
+        border-radius: 0;
+    }
+
+    /* Sovrascrittura PADDING per pagine CON header fissi (Mobile) */
+    body.page-with-fixed-header .container {
+        /* Padding per spingere il contenuto sotto le barre fisse mobile: ~180px */
+        padding-top: 180px; 
+    }
+
+    /* Riporta il padding laterale ai contenitori interni */
+    .title-container,
+    .header-controls {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .chart-container,
+    .table-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 10px auto !important;
+        padding: 0; 
+        box-sizing: border-box;
+    }
+
+    /* Tabelle e Grafici */
+    table {
+        font-size: 0.8em;
+        border-radius: 0;
+    }
+
+
+    .chart-container {
+        padding: 10px;
+        border-radius: 0;
+    }
+    .alert-scroll-container {
+        width: 95%;
+        margin: 10px auto;
+        padding: 8px 10px;
+    }
+}
+
+.weather-desc {
+    /* La dimensione che vuoi per la descrizione, sotto l'emoji */
+    font-size: 1.0em !important; 
+    /* Opzionale: puoi anche dare un colore diverso, ad esempio un grigio più scuro */
+    color: #ffffff; 
+    font-weight: normal; 
+}
+
+
+
+
+/*
+=================================================
+  5. STILI MENU LATERALE (SIDEBAR)
+=================================================
+*/
+
+/* Contenitore principale dell'header per allineare gli elementi */
+.header-content-top {
+    display: flex;
+    justify-content: space-between; /* Distribuisce il pulsante, il titolo e il placeholder */
+    align-items: center;
+    width: 100%;
+    max-width: 980px; /* Limita alla larghezza del tuo container */
+    /*padding: 20px 20px 20px 20px; /* Padding sopra e laterale */
+    box-sizing: border-box;
+}
+
+/* Pulsante Hamburger (Menu Button) */
+.menu-button {
+    background: none;
+    border: none;
+    color: var(--text-color); /* Bianco, come il testo principale */
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    z-index: 1300; /* Assicurati che sia sopra l'overlay */
+    /* Spazio segnaposto, stesso padding del pulsante per centrare il titolo */
+    width: 30px; 
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Nasconde il segnaposto, il pulsante hamburger sarà a sinistra */
+/* Se vuoi centrare il titolo, rendi questo elemento visibile con la stessa larghezza del pulsante */
+.menu-button-placeholder {
+    width: 30px; 
+    height: 30px;
+    visibility: hidden; /* Mantiene lo spazio per centrare il titolo */
+}
+
+/* Adattamento Titolo per la riga */
+.status-header .title-container {
+    padding: 10; /* Rimuovi il padding che potrebbe interferire con l'allineamento */
+    flex-grow: 1; /* Permette al container del titolo di occupare lo spazio centrale */
+    text-align: center;
+}
+.status-header .title-container h {
+    margin: 0;
+    /* Assicurati che la dimensione del carattere sia corretta per la riga */
+    font-size: 1.8em; 
+}
+
+
+/* Stili del Menu Laterale (Off-Canvas) */
+.sidebar {
+    height: 100%;
+    width: 0; /* Inizialmente chiuso */
+    position: fixed;
+    z-index: 2000;
+    top: 0;
+    left: 0;
+    background-color: var(--background-color); 
+    overflow-x: hidden;
+    /*transition: 0.5s; /* Animazione di apertura/chiusura */
+    padding-top: 60px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+}
+
+/* Contenuto e Link del Menu */
+.sidebar-header {
+    padding: 15px 15px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+.sidebar-header h3 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 1.2em;
+    text-shadow: none;
+    text-align: left;
+    flex-grow: 1;
+}
+
+.sidebar .nav-link {
+    padding: 12px 15px;
+    text-decoration: none;
+    font-size: 1.1em;
+    color: var(--secondary-text-color);
+    display: block;
+    transition: 0.3s;
+    text-align: left;
+}
+
+.sidebar .nav-link i {
+    margin-right: 10px;
+}
+
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+    color: var(--primary-color);
+    background-color: var(--table-row-even-bg);
+}
+
+.sidebar .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 36px;
+    margin-left: 50px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+/* Overlay Sfondo */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1500;
+    display: none; /* Inizialmente nascosto */
+    transition: opacity 0.5s;
+}
+
+/* Footer del Menu */
+.sidebar-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 10px 15px;
+}
+.sidebar-footer {
+    display: block;
+    padding: 10px 15px;
+    font-size: 0.8em;
+    color: var(--secondary-text-color);
+    text-align: left;
+}
+
+/* Media Query: Adattamento mobile */
+@media (max-width: 520px) {
+    /* Manteniamo l'header mobile ma adattiamo i margini */
+    .header-content-top {
+        padding: 15px;
+    }
+    .status-header .title-container h {
+        font-size: 1.5em; /* Riduci la dimensione del titolo in mobile */
+    }
+}
+
+/*
+=================================================
+ 1. NUOVA CLASSE BASE UNIVERSALE PER GLI HEADER 
+=================================================
+*/
+
+.generic-page-header {
+    /* ⚠️ PROPRIETÀ FONDAMENTALI PER IL PULSANTE ASSOLUTO */
+    position: relative; 
+    display: flex; 
+    align-items: center; 
+    
+    /* Stili base esistenti per coerenza */
+    justify-content: center;
+    padding: 0px 10px;
+    background-color: var(--chart-bg-color); 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/*
+=================================================
+ 2. STILE SEMPLICE PULSANTE INDIETRO (Universale)
+=================================================
+*/
+
+.back-button-page {
+    position: absolute; 
+    left: 15px; 
+    top: 50%;
+    transform: translateY(-50%); 
+    
+    /* Aspetto: Simbolo Bianco, Sfondo Trasparente */
+    background: none; 
+    border: none; 
+    color: var(--text-color); /* Bianco */
+    
+    font-size: 24px;
+    cursor: pointer; 
+    padding: 8px; 
+    z-index: 10;
+}
+
+.back-button-page:hover {
+    color: var(--primary-color);
+}
+
+/* ======================================= */
+/* 2. STILI PER sport.js (Widget Attività) */
+/* ======================================= */
+
+#sport-widget {
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: rgba(30, 30, 30, 1);
+    box-shadow: 0 0 40px rgb(0 129 255);
+    text-align: center;
+}
+
+#sport-widget h3 {
+    color: var(--primary-text-color, #333);
+    margin-bottom: 20px;
+    font-size: 1.3em;
+}
+
+/* Controlli del Menu a tendina */
+.sport-menu-container {
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.custom-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 5px;
+    background-color: rgba(30, 30, 30, 1);
+    color: rgba(255, 255, 255, 1);
+    font-size: 1em;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.custom-select:focus {
+    border-color: var(--accent-color, #007bff);
+    outline: none;
+}
+
+/* Tabella Sport */
+.sport-table-container {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.sport-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Mantiene le colonne uniformi */
+}
+
+.sport-table th, .sport-table td {
+    padding: 10px 5px;
+    text-align: center;
+    border: 1px solid var(--border-color, #eee);
+    font-size: 0.9em;
+    vertical-align: middle;
+}
+
+.sport-table th {
+    background-color: rgba(30, 30, 30, 1);;
+    color: var(--primary-text-color, #fffff);
+    font-weight: 600;
+}
+
+/* Riga Nascosta (se la volessi riattivare in futuro) */
+.factor-row {
+    transition: opacity 0.3s, max-height 0.3s;
+    /* La classe '.hidden-row' andrà a nasconderla */
+}
+
+.hidden-row {
+    display: none; /* Rimosso l'effetto di transizione per semplicità */
+}
+
+/* Stili per il Donut Chart SVG (Grafico a Ciambella) */
+.day-circle-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50px; /* Altezza fissa per allineamento */
+}
+
+.day-circle-svg {
+    /* Dimensione massima del grafico */
+    width: 50px; 
+    height: 50px;
+    transform: rotate(-90deg); /* Ruota per far partire la progressione in alto */
+    overflow: visible; /* Assicura che i bordi non vengano tagliati */
+}
+
+.circle-bg {
+    fill: none;
+    stroke: var(--circle-bg-color, #e0e0e0); /* Colore grigio chiaro per il fondo */
+    stroke-width: 4;
+}
+
+.circle-fill {
+    fill: none;
+    stroke-width: 4;
+    stroke-linecap: round; /* Estremità arrotondate */
+    transition: stroke-dashoffset 0.5s ease-out; /* Animazione sulla percentuale */
+}
+
+/* Testo Percentuale */
+.percentage-text {
+    /*font-size: 0.4em; /* Adatta la dimensione del testo all'SVG 50x50 */
+    font-weight: bold;
+    fill: var(--primary-text-color, #333);
+    /* Correggi la rotazione se necessario, in base al setup di rotate(-90deg) */
+    transform: rotate(90deg) translate(0, 1px); 
+    /* L'elemento text deve compensare la rotazione data al contenitore SVG */
+}
+
+/* Classi di Colore per il Testo */
+.favorevole-ottimo {
+    fill: #4CAF50 !important; /* Verde */
+}
+.favorevole-buono {
+    fill: #FFC107 !important; /* Arancio */
+}
+.favorevole-scarso {
+    fill: #F44336 !important; /* Rosso */
+}
+
+/* Media Query per schermi piccoli */
+@media (max-width: 600px) {
+    .sport-table th, .sport-table td {
+        padding: 8px 3px;
+        font-size: 0.85em;
+    }
+    .sport-table {
+        min-width: 500px; /* Assicura che la tabella non si rompa troppo su mobile */
+    }
+
+   
+
+
+	

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MeteoNB</title>
+    <link rel="icon" type="image/x-icon" href="/METEONB/favicon.ico">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="city.css">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://code.highcharts.com/themes/dark-unica.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+                    
+body { margin-top: 65px; } /* Aggiusta il margine se hai un header fisso */
+        
+/* Contenitore Responsive per l'Iframe (IMPOSTAZIONI BASE E PC) */
+.iframe-responsive-wrapper {
+    position: relative; 
+    width: 95%; 
+    
+    /* ⬅️ CORREZIONE PC: Più largo, max-width aumentato a 750px */
+    max-width: 750px; 
+    
+    margin: 20px auto; 
+    
+    /* ⬅️ CORREZIONE PC: Meno alto, padding-top ridotto a 45% */
+    padding-top: 45%; 
+    overflow: hidden;
+    
+    box-sizing: border-box; 
+}
+
+/* Applica il dimensionamento corretto all'iframe figlio (Invariato) */
+.iframe-responsive-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%; 
+    height: 100%; 
+    border: none;
+}
+
+/* --- OTTIZZAZIONE MOBILE: Mantiene la configurazione ideale per schermi piccoli (< 560px) --- */
+@media (max-width: 560px) {
+    .iframe-responsive-wrapper {
+        /* Mobile: Larghezza massima */
+        max-width: 100%; 
+        width: 100%; 
+        margin-left: 0; 
+        margin-right: 0;
+
+        /* Mobile: Altezza più generosa per la leggibilità */
+        padding-top: 65%; 
+    }
+}
+
+
+
+		table { width: 100% !important; 
+				border-collapse: collapse !important; 
+				margin: 20px auto !important; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #333; color: white; }
+        .sole { background-color: #74704b; } /* Giallo chiaro */
+        .luna { background-color: #3b414e; } /* Azzurro chiaro */
+        .fase { font-weight: bold; }
+        .nota { font-size: 0.8em; color: gray; margin-top: 20px; }
+    </style>
+</head>
+
+<body class="page-with-fixed-header">
+  <nav id="sidebarMenu" class="sidebar">
+    <div class="sidebar-header">
+      <h3>Menu</h3>
+      <button id="closeSidebar" class="close-btn">&times;</button>
+    </div>
+    <a href="/METEONB/index.html" class="nav-link active"><i class="fas fa-home"></i> Home</a>
+    <a href="https://meteofree.altervista.org/METEONB/notizie/notizie.php" class="nav-link"><i class="fas fa-database"></i> Notizie</a>
+    <a href="/METEONB/radar/radar.html" class="nav-link"><i class="fas fa-satellite-dish"></i> Radar</a>
+    <a href="/METEONB/pre/pre.html" class="nav-link"><i class="fas fa-satellite-dish"></i> Stazione</a>
+    <a href="/METEONB/pesca/pesca.html" class="nav-link"><i class="fas fa-satellite-dish"></i> Pesca</a>
+    <a href="https://neige.meteociel.fr/satellite/anim_vis_it.gif" class="nav-link"><i class="fas fa-satellite-dish"></i> Satellite</a>
+    <a href="https://neige.meteociel.fr/satellite/anim_ir_color.gif" class="nav-link"><i class="fas fa-satellite-dish"></i> Satellite rgb</a>
+    <a href="https://www.tropicaltidbits.com/analysis/models/?model=ecmwf&region=eu&pkg=z500_mslp" class="nav-link"><i class="fas fa-satellite-dish"></i> Mappe</a>
+
+    <div class="sidebar-divider"></div>
+    <span class="sidebar-footer">Versione: <span id="appVersion">1.0.0</span></span>
+  </nav>
+
+  <div class="overlay" id="sidebarOverlay"></div>
+
+  <div class="scrolling-bar">
+    <span class="scrolling-text"></span>
+  </div>
+
+  <header class="status-header">
+    <div class="header-content-top">
+      <button id="openSidebar" class="menu-button">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div id="searchBarContainer" class="search-bar-container search-container">
+        <span id="locationDisplay" class="location-display">
+          <i id="searchIcon" class="fas fa-search"></i> <span id="locationName"></span>
+          <span id="lastUpdate">Caricamento dati...</span>
+        </span>
+
+        <input type="text" id="cityInput" placeholder="Cerca città (es. Padova, Italia)..." class="main-search-input hidden">
+        <button id="closeSearchButton" class="close-search-button hidden">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="menu-button-placeholder"></div>
+    </div>
+    <div class="subtitle-divider"></div>
+  </header>
+        <div class="subtitle-divider"></div>
+         <div class="container">
+       <div class="iframe-responsive-wrapper">
+<iframe 
+  src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=8&overlay=radar&product=radar&level=surface&lat=-70.566&lon=11.983&message=true"
+  frameborder="0"
+  allow="geolocation 'none'; fullscreen"
+  >
+</iframe>
+</div>
+
+
+<div id="precipitationChartContainer" style="width: 100%; height: 200px;"></div>
+      
+      <div class="charts-container" style="display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 20px;">
+    <div style="width: 48%; min-width: 300px; height: 350px; margin-bottom: 20px;">
+        <canvas id="sunChartCanvas"></canvas>
+    </div>
+
+    <div style="width: 48%; min-width: 300px; height: 350px; margin-bottom: 20px;">
+        <canvas id="moonChartCanvas"></canvas>
+    </div>
+</div>
+      
+      <h3 id="titoloTabella">Caricamento dati celesti...</h3>
+    
+    
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Giorno</th>
+                <th class="sole">Alba Sole</th>
+                <th class="sole">Tramonto Sole</th>
+                <th class="luna">Alba Luna</th>
+                <th class="luna">Tramonto Luna</th>
+                <th class="fase">Fase Lunare</th>
+            </tr>
+        </thead>
+        <tbody id="tabellaCorpo">
+            </tbody>
+    </table>
+
+    <p class="nota">I dati sono relativi alle coordinate: Caricamento in corso...</p>
+      
+      </div>
+</div>
+     
+    
+    
+
+<script type="module" src="../main.js"></script>
+<script type="module" src="../bar.js"></script>
+<script type="module" src="city.js"></script>
+<script type="module" src="rise.js"></script>
+
+    
+</body>
+</html>
