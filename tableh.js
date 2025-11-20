@@ -124,8 +124,21 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let j = 0; j < step && (absoluteIndex + j) < hourlyData.precipitation.length; j++) {
                 precipitationSum += hourlyData.precipitation[absoluteIndex + j];
             }
-            const precipitation = precipitationSum; 
-            const displayPrecipitation = (Math.round(precipitation * 10) / 10).toFixed(1);
+             
+            // --- INIZIO MODIFICA: Gestione e Conversione Unità ---
+            // Qui usiamo precipitationSum per l'inizializzazione
+            let displayPrecipitation = (Math.round(precipitationSum * 10) / 10).toFixed(1); 
+            let precipitationUnit = ' mm';
+
+            // Condizione: temperatura < 1°C E precipitazione rilevata. (CORRETTO)
+            if (temp < 1 && precipitationSum > 0.1) {
+                // Conversione da mm a cm (1 mm = 0.1 cm)
+                const precipInCm = precipitationSum / 1; 
+                displayPrecipitation = precipInCm.toFixed(1); 
+                precipitationUnit = ' cm';
+            }
+            // --- FINE MODIFICA ---
+            
             const precipitationEmoji = precipitationEmojiMap(displayPrecipitation);
 
             // --- CHIAMATA ALLE FUNZIONI DI DESCRIZIONE (uso di hourlyWeatherCode=null per getWeatherDescription) ---
@@ -138,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const timeDisplay = `${startTime}`; 
 
             // statusClass usa la funzione modificata senza WMO
-            const statusClass = getWeatherAlertStatus(hourlyWeatherCode, temp, precipitation, wind, false);
+            const statusClass = getWeatherAlertStatus(hourlyWeatherCode, temp, precipitationSum, wind, false);
             
             // CORREZIONE CRITICA: Chiama getWeatherEmoji passando i dati orari e l'indice assoluto
             const weatherEmoji = getWeatherEmoji(hourlyData, absoluteIndex);
@@ -149,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.innerHTML = `<td><span class="status-dot ${statusClass}"></span><br>${timeDisplay}</td>
                             <td><span style="font-size: 2.0em !important;">${weatherEmoji}</span><br><span style="font-size: 1.0em !important;"></td>
                             <td>${temp}°C</td>
-                            <td>${precipitationEmoji} ${displayPrecipitation} mm ${probPrecipitation}%<br>${precipitationDescription}</td>
+                            <td>${precipitationEmoji} ${displayPrecipitation} ${precipitationUnit} ${probPrecipitation}%<br>${precipitationDescription}</td>
                             <td>${wind} km/h<br>${windDescription}</td>`;
             // ---------------------------------------------------------------------
 
@@ -215,4 +228,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initData();
 
 });
+
 

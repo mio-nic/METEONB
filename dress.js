@@ -49,7 +49,7 @@ const getHourlyWeatherIcon = (data, index, numericHour) => {
 
 const getDressSuggestion = (temp) => {
     const t = Number(temp);
-    if (t >= 30) { return `Costume`; } else if (t >= 25) { return `T-shirt`; } else if (t >= 20) { return `Maglietta`; } else if (t >= 15) { return `Felpa`; } else if (t >= 10) { return `Giacca`; } else if (t >= 5) { return `Giubbotto`; } else { return `Cappotto.`; }
+    if (t >= 30) { return `Costume`; } else if (t >= 25) { return `T-shirt`; } else if (t >= 20) { return `Maglietta`; } else if (t >= 15) { return `Felpa`; } else if (t >= 10) { return `Giacca leggera`; } else if (t >= 5) { return `Giubbotto pesante`; } else { return `Cappotto imbottito.`; }
 };
 
 const getTempColorClass = (temp) => {
@@ -247,12 +247,33 @@ export const generateHourlyDressTable = (allData) => {
         const iconHtml = getHourlyWeatherIcon(hourlyData, dataReadIndex, numericHourForIcon); 
         weatherIcons.push(iconHtml);
         
-        temperatures.push(`${Math.round(temp)}°C`);
+// --- INIZIO MODIFICA TEMPERATURA E FIOCCO DI NEVE (❄️) ---
+        let tempDisplay = `${Math.round(temp)}°C`;
+        if (temp < 5) { // Aggiunge ❄️ se la temperatura è inferiore a 5°C
+            tempDisplay = `❄️ ${tempDisplay}`;
+            } else if (temp > 33) { // Caldo Estremo
+            tempDisplay = `🔥 ${tempDisplay}`;
+        }
+        
+        temperatures.push(tempDisplay);
+        // --- FINE MODIFICA TEMPERATURA E FIOCCO DI NEVE ---
         suggestions.push(getDressSuggestion(temp));
         
-        // Unisci i dati di precipitazione
-        const combined = `${Math.round(pop)}%, ${precip.toFixed(1)} mm`;
-        combinedPrecipitation.push(combined);
+ // --- INIZIO MODIFICA: GESTIONE PRECIPITAZIONI (mm/cm) ---
+        let precipValue = precip.toFixed(1);
+        let precipUnit = 'mm';
+
+        // Se la temperatura è minore di 1°C E ci sono precipitazioni
+        if (temp < 1 && precip > 0.1) {
+            // Conversione da mm a cm (dividendo per 10)
+            precipValue = (precip / 1).toFixed(1); // Mostra 2 decimali per cm
+            precipUnit = 'cm';
+        }
+        
+        // Unisci i dati di precipitazione
+        const combined = `${Math.round(pop)}%, ${precipValue}${precipUnit}`;
+        combinedPrecipitation.push(combined);
+        // --- FINE MODIFICA: GESTIONE PRECIPITAZIONI ---
         
         // Ottiene la classe di colore per questa colonna
         colorClasses.push(getTempColorClass(temp));

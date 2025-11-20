@@ -510,7 +510,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const numericMin = typeof dailyData.temperature_2m_min[index] === 'number';
             const avgTemp = (numericMax && numericMin) ? (maxTemp + minTemp) / 2 : 0;
             
-            const displaySumPrecipitation = Number(sumPrecipitation).toFixed(1);
+            let displaySumPrecipitation = Number(sumPrecipitation).toFixed(1);
+            let precipitationUnit = ' mm'; // Unità predefinita
+            
+            // --- INIZIO CONDIZIONE RICHIESTA ---
+            // La precipitazione (pioggia) è considerata 'pioggia' se sumPrecipitation > 0 (giorno piovoso)
+            const isRain = sumPrecipitation > 0.1; // Si considera pioggia una quantità minima misurabile
+            
+            if (avgTemp < 1 && isRain) {
+                // Conversione da mm a cm (1 mm = 0.1 cm)
+                const precipInCm = sumPrecipitation / 1;
+                displaySumPrecipitation = precipInCm.toFixed(1); // Usa più decimali per i cm
+                precipitationUnit = ' cm';
+            }
+            // --- FINE CONDIZIONE RICHIESTA ---
             const precipitationEmoji = precipitationEmojiMap(displaySumPrecipitation);
 
             const weatherDescription = getWeatherDescription(weatherCode); 
@@ -527,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.innerHTML = `<td><span class="status-dot ${statusClass}"></span><br>${dayName}</td>
                                  <td>${weatherEmoji}</td>
                                  <td>${tempDisplay}</td>
-                                 <td>${displaySumPrecipitation}mm, ${probPrecipitation}%<br>${precipitationDescription}</td>
+                                 <td>${displaySumPrecipitation}${precipitationUnit}, ${probPrecipitation}%<br>${precipitationDescription}</td>
                                  <td>${windSpeed}km/h<br>${windDescription}</td>`;
 
             weatherTableBody.appendChild(row);
