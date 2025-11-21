@@ -368,8 +368,8 @@ const TABLE_CSS = `
 /* MEDIA QUERY PER MOBILE */
 @media (max-width: 600px) {
     :root {
-        --alert-col-width: 60px;
-        --day-col-width: 40px;
+        /*--alert-col-width: 60px;*/
+        /*--day-col-width: 40px;*/
     }
     .daily-analysis-table td, .daily-analysis-table th {
         padding: 8px 3px;
@@ -661,6 +661,7 @@ export function getComfortChartInstance() {
 
 
 export const updateVisuals = updateComfortTable;
+
 
 
 
