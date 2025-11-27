@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz sul Meteo ⛈️</title>
+    
+    <link rel="stylesheet" href="../style.css"> 
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="page-with-fixed-header">
+
+    <div class="container quiz-container-wrapper">
+        
+        <div class="quiz-header generic-page-header">
+            <button class="back-button-page" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            
+            <div class="title-container">
+                <h>Quiz Meteo</h>
+                
+            </div>
+            <p class="weather-desc">Metti alla prova le tue conoscenze sul tempo!</p>
+        </div>
+        
+        <div id="quiz-container" class="quiz-container">
+            <div id="question-card" class="question-card">
+                <h3 id="question-number">Domanda 1 / 10</h3>
+                <p id="question-text" class="question-text">Caricamento...</p>
+                <div id="options-container" class="options-container">
+                    </div>
+                <button id="next-button" class="next-button hidden" onclick="nextQuestion()">Prossima Domanda &rarr;</button>
+            </div>
+        </div>
+        
+        <div id="result-screen" class="quiz-container question-card hidden">
+            <h3 class="result-title">Risultato del Quiz! 💯</h3>
+            <p id="final-score" class="final-score">Hai totalizzato X punti su 10.</p>
+            <div id="score-description" class="score-description">
+                </div>
+            <button class="back-button" onclick="window.location.reload()">Riprova il Quiz</button>
+        </div>
+    </div>
+
+    <script src="domande.js"></script> 
+    <script src="quiz.js"></script> 
+</body>
+</html>
