@@ -224,7 +224,7 @@ function createFishingScoreHtml(score) {
     const color = score >= 75 ? '#2ECC71' : (score >= 40 ? '#F39C12' : '#E74C3C'); // Verde, Giallo, Rosso
 
     return `
-        <div style="display: flex; justify-content: center; align-items: center; width: 40px; height: 40px; margin: 0 auto;">
+        <div style="display: flex; justify-content: center; align-items: center; width: 40px; height: 40px; margin: 0 auto; position: relative;">
             <svg width="40" height="40" viewbox="0 0 40 40" style="transform: rotate(-90deg);">
                 <circle cx="20" cy="20" r="${radius}" fill="none" stroke="#333" stroke-width="5"></circle>
                 <circle cx="20" cy="20" r="${radius}" fill="none" stroke="${color}" stroke-width="5"

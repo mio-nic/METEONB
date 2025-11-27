@@ -15,58 +15,87 @@ let mapInstance = null; // NUOVA VARIABILE PER LA MAPPA
 let markerInstance = null; // NUOVA VARIABILE PER IL MARKER
 
 
-// --- NUOVA FUNZIONE DI VALUTAZIONE PESCA ---
+// --- NUOVA FUNZIONE DI VALUTAZIONE PESCA (Precisione 0.1) ---
 
 /**
- * Funzione di scoring per la favorevolezza della pesca (0-10) basata sui parametri meteo.
- * (Questa è una logica semplificata, adattabile con formule più complesse per precisione.)
+ * Funzione di scoring per la favorevolezza della pesca (0.0-10.0)
+ * L'obiettivo è assegnare 10.0 solo in condizioni meteorologiche perfette, stabili e rare.
  * * @param {number} temp - Temperatura in °C.
  * @param {number} windSpeed - Velocità del vento in km/h.
  * @param {number} pressure - Pressione a livello del mare in hPa.
  * @param {number} precipitation - Precipitazione in mm.
- * @returns {number} Punteggio di favorevolezza (0-10).
+ * @returns {number} Punteggio di favorevolezza (0.0-10.0).
  */
 const calculateFishingScore = (temp, windSpeed, pressure, precipitation) => {
-    let score = 10; // Inizia da un livello molto positivo
+    let score = 0;
+    let idealConditionsMet = 0; // Contatore per il bonus finale
 
-    // 1. Pressione (fattore chiave: cambiamenti e livelli moderati)
-    // Condizione ideale: 1010 hPa - 1020 hPa (pressione stabile e moderata)
-    if (pressure < 1000 || pressure > 1030) {
-        score -= 2; // Pressione molto bassa o molto alta è meno favorevole
-    } else if (pressure < 1010 || pressure > 1020) {
-        score -= 1; // Pressione leggermente fuori dall'ideale
+    // --- RANGE IDEALI RISTRETTI ---
+    const PRESSURE_OPTIMAL_MIN = 1015.0; // Pressione ideale e stabile
+    const PRESSURE_OPTIMAL_MAX = 1017.0;
+    
+    const WIND_OPTIMAL_MAX = 4.0; // Quasi assenza di vento
+    
+    const TEMP_OPTIMAL_MIN = 19.0; // Temperatura molto mite e specifica
+    const TEMP_OPTIMAL_MAX = 21.0;
+
+    const PRECIP_OPTIMAL_MAX = 0.0; // Assenza totale
+
+    // 1. Pressione (Max 3.7 Punti)
+    if (pressure >= PRESSURE_OPTIMAL_MIN && pressure <= PRESSURE_OPTIMAL_MAX) {
+        score += 3.7;
+        idealConditionsMet++;
+    } else if (pressure >= 1012.0 && pressure <= 1020.0) {
+        score += 1.8; // Buono
+    } else if (pressure < 1005.0 || pressure > 1025.0) {
+        score -= 2.0; // Penalità severa per pressione lontana dall'ideale
+    } else if (pressure < 1010.0 || pressure > 1022.0) {
+        score -= 0.5; // Penalità leggera
     }
 
-    // 2. Vento (ideale: leggero o assente)
-    // 0-10 km/h: Ottimo
-    // 10-20 km/h: Buono
-    // > 20 km/h: Sfavorevole
-    if (windSpeed > 20) {
-        score -= 3;
-    } else if (windSpeed > 5) {
-        score -= 1.5;
-    }
-
-    // 3. Temperatura (ideale: mite, dipende dalla specie, qui usiamo un range generale)
-    // 10°C - 25°C è un range generale buono per molte specie
-    if (temp < 8 || temp > 28) {
+    // 2. Vento (Max 3.7 Punti)
+    if (windSpeed <= WIND_OPTIMAL_MAX) {
+        score += 3.7;
+        idealConditionsMet++;
+    } else if (windSpeed <= 8.0) {
+        score += 1.8; // Vento leggero accettabile
+    } else if (windSpeed > 15.0) {
+        // Forte penalità se il vento è sopra i 15 km/h
         score -= 2.5;
-    } else if (temp < 18 || temp > 22) {
-        score -= 1;
+    } else if (windSpeed > 10.0) {
+        score -= 1.0; // Penalità moderata
     }
 
-    // 4. Precipitazioni (ideale: assenti o pioggerella leggera non immediata)
-    // > 0.5 mm/h: Sfavorevole
-    if (precipitation > 0.5) {
-        score -= 3;
-    } else if (precipitation > 0) {
-        score -= 1;
+    // 3. Temperatura (Max 1.8 Punti)
+    if (temp >= TEMP_OPTIMAL_MIN && temp <= TEMP_OPTIMAL_MAX) {
+        score += 1.8;
+        idealConditionsMet++;
+    } else if (temp >= 10.0 && temp <= 25.0) {
+        score += 0.4; // Range mite generale
+    } else if (temp < 5.0 || temp > 30.0) {
+        score -= 1.2; // Penalità per temperature estreme
     }
 
-    // Assicura che il punteggio sia tra 0 e 10
-    score = Math.max(0, Math.min(10, score));
+    // 4. Precipitazioni (Max 0.8 Punti)
+    if (precipitation === PRECIP_OPTIMAL_MAX) {
+        score += 0.8;
+        idealConditionsMet++;
+    } else if (precipitation > 1.0) {
+        score -= 2.0; // Penalità forte per pioggia significativa
+    } else if (precipitation > 0.1) {
+        score -= 0.7; // Penalità per pioggerella
+    }
 
-    // Arrotonda al decimale per un grafico più liscio ma comunque variabile
+    // 5. Bonus "Condizioni Perfette" (Max 1.0 Punti)
+    // Assegna il punto extra per raggiungere 10.0 solo se TUTTE le condizioni strettamente ottimali sono rispettate.
+    if (idealConditionsMet === 4) {
+        score += 1.0;
+    }
+
+    // 6. Arrotondamento e Saturazione
+    // Assicura che il punteggio sia tra 0.0 e 10.0 e arrotonda al decimo.
+    score = Math.max(0.0, Math.min(10.0, score));
+
     return parseFloat(score.toFixed(1));
 };
 
@@ -239,14 +268,14 @@ const drawFishingChartLocal = (hourlyData, utcOffsetSeconds, containerId) => {
                     linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
                     stops: [
                         [0, 'rgba(0, 122, 204, 0.8)'], // Blu più scuro in alto
-                        [1, 'rgba(0, 122, 204, 0.1)']  // Trasparente in basso
+                        [1, 'rgba(0, 122, 204, 1)']  // Trasparente in basso
                     ]
                 }, 
                 fillColor: {
                     linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
                     stops: [
                         [0, 'rgba(0, 122, 204, 0.5)'],
-                        [1, 'rgba(0, 122, 204, 0.05)']
+                        [1, 'rgba(0, 122, 204, 0.5)']
                     ]
                 },
                 shadow: false
