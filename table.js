@@ -11,27 +11,35 @@ import { generateHourlyDressTable } from './dress.js';
 
 // --- FUNZIONI DI UTILITÀ (Alert e Descrizione) ---
 
-const getWeatherAlertStatus = (weatherCode, temp, precipitation, windSpeed, isDaily = false) => {
+const getWeatherAlertStatus = (weatherCode, maxTemp, minTemp, precipitation, windSpeed) => {
     let alertLevel = 0;
-    // La logica originale è stata mantenuta per definire i livelli di allerta
-    // Si noti che se temp, precipitation o windSpeed sono 'N/D' o null, la conversione a Number potrebbe non riuscire,
-    // ma in renderCurrentWeatherCard i valori sono inizializzati a 0, il che aiuta a prevenire questo problema
-    const t = Number(temp) || 0;
-    const p = Number(precipitation) || 0;
-    const w = Number(windSpeed) || 0;
+    
+    // Inizializzazione e conversione dei valori
+    const tMax = Number(maxTemp) || 0;
+    const tMin = Number(minTemp) || 0;
+    const p = Number(precipitation) || 0; 
+    const w = Number(windSpeed) || 0; 
 
-    if (w >= 50 || p >= (isDaily ? 50 : 15)) {
+    // ROSSO (MAX RISK)
+    // Se la Max è >= 38 O la Min è <= -10 O vento >= 50 O pioggia >= 50
+    if (tMax >= 38 || tMin <= -10 || w >= 50 || p >= 50) {
         alertLevel = 3; // Rosso
-    } else if (w >= 30 || p >= (isDaily ? 30 : 10) || t <= -1) {
+    } 
+    // ARANCIONE (HIGH RISK)
+    // Se la Max è >= 33 O la Min è <= 0 O vento >= 25 O pioggia >= 30
+    else if (tMax >= 33 || tMin <= 0 || w >= 25 || p >= 30) {
         alertLevel = 2; // Arancione
-    } else if (w >= 20 || p >= (isDaily ? 20 : 5) || t <= 4) {
+    } 
+    // GIALLO (LOW RISK)
+    // Se la Max è >= 28 O la Min è <= 5 O vento >= 10 O pioggia >= 1
+    else if (tMax >= 28 || tMin <= 5 || w >= 10 || p >= 1) {
         alertLevel = 1; // Giallo
     }
 
     switch (alertLevel) {
-        case 3: return 'dot-discreto'; 
-        case 2: return 'dot-allerta'; 
-        case 1: return 'dot-buono'; 
+        case 3: return 'dot-discreto'; // Rosso
+        case 2: return 'dot-allerta'; // Arancione
+        case 1: return 'dot-buono'; // Giallo
         default: return 'dot-ottimo';
     }
 };
@@ -58,6 +66,8 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
 
     // Allerta Rossa (Rischio Alto)
     if (statusClass === 'dot-discreto') {
+    	if (t >= 38) risks.push('Caldo Estremo (colpo di calore)');
+        if (t <= -10) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
         if (w >= 50) risks.push('vento molto forte (>50km/h)');
         if (p >= 50) risks.push('piogge torrenziali (>50mm)');
         if (risks.length > 0) return `Rischio Estremo di ${risks.join(' e/o ')}`;
@@ -65,18 +75,20 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
 
     // Allerta Arancione (Rischio Moderato/Alto)
     if (statusClass === 'dot-allerta') {
-        if (t <= -1) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
+        if (t >= 33) risks.push('Caldo intenso (disagio moderato)');
+        if (t <= 0) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
         if (w >= 30) risks.push('vento forte (>30km/h)');
-        if (p >= 30) risks.push('piogge intense (>30mm)');
+        if (p >= 25) risks.push('piogge intense (>30mm)');
         if (risks.length > 0) return `Rischio Alto di ${risks.join(', ')}`;
     }
 
     // Allerta Gialla (Rischio Basso)
     if (statusClass === 'dot-buono') {
-        if (t <= 4 && t > -1) risks.push('freddo (temperatura <4°C)');
-        if (w >= 20) risks.push('raffiche di vento (>20km/h)');
-        if (p >= 20) risks.push('piogge isolate (>20mm)');
-        if (risks.length > 0) return `Rischio Moderato di ${risks.join(', ')}`;
+        if (t >= 28) risks.push('Caldo (disagio lieve)');
+        if (t <= 5) risks.push('freddo (temperatura <5°C)');
+        if (w >= 10) risks.push('raffiche di vento (>10km/h)');
+        if (p >= 1) risks.push('pioggia (>1mm)');
+        if (risks.length > 0) return `Rischio basso di ${risks.join(', ')}`;
     }
     
     // Fallback in caso di logica non coperta (dovrebbe essere raro)
@@ -104,7 +116,7 @@ const getAlertDescription = (statusClass, riskDescription) => {
         };
         case 'dot-buono': return { 
             title: 'ALLERTA GIALLA', 
-            description: `${desc}. Condizioni in peggioramento. Si consiglia cautela.` 
+            description: `${desc}. Condizioni variabili. Si consiglia cautela.` 
         };
         default: return { 
             title: 'NESSUNA ALLERTA', 
@@ -336,20 +348,44 @@ const renderCurrentWeatherCard = (allData, currentTimeIndex) => {
 
     const maxTemp = getMaxMin(dailyData.temperature_2m_max, 0);
     const minTemp = getMaxMin(dailyData.temperature_2m_min, 0);
-    const precipitationSum = (dailyData.precipitation_sum.length > 0 ? dailyData.precipitation_sum[0] : 0).toFixed(1); 
+    const precipitationSum = (dailyData.precipitation_sum.length > 0 ? dailyData.precipitation_sum[0] : 0).toFixed(1); 
     const maxDailyWindSpeed = dailyData.wind_speed_10m_max.length > 0 ? dailyData.wind_speed_10m_max[0] : 0;
 
-    const numericMax = typeof dailyData.temperature_2m_max[0] === 'number';
-    const numericMin = typeof dailyData.temperature_2m_min[0] === 'number';
-// Controlla se minTemp è un numero valido E se è minore o uguale a 4.
-const dailyAvgTemp = (numericMax && numericMin) ? (Number(maxTemp) + Number(minTemp)) / 2 : 0;
+    // --- NUOVA LOGICA DI ALLERTA (Corretta e Unificata) ---
     
-    // Calcola lo stato di allerta
-    const dailyAlertClass = getWeatherAlertStatus(null, dailyAvgTemp, precipitationSum, maxDailyWindSpeed, true);
+    // 1. Dichiara la variabile *una sola volta*
+    const dailyAlertClass = getWeatherAlertStatus(
+        null, 
+        maxTemp, 
+        minTemp, 
+        precipitationSum, 
+        maxDailyWindSpeed
+    );
+    
+    // 2. Calcola il colore
     const dailyAlertColor = getAlertHexColor(dailyAlertClass);
+     
+    // 3. Logica per determinare quale temperatura usare nella descrizione (Max o Min)
+    let tempForDescription = maxTemp; 
+     
+    if (dailyAlertClass !== 'dot-ottimo') {
+        // Logica per confrontare i livelli di rischio Freddo vs Caldo/Vento/Pioggia
+        // NOTA: I livelli di rischio per vento/pioggia vengono trattati in modo implicito come rischio caldo
+        const hotRiskLevel = (Number(maxTemp) >= 38 ? 3 : Number(maxTemp) >= 33 ? 2 : Number(maxTemp) >= 28 ? 1 : 0);
+        const coldRiskLevel = (Number(minTemp) <= -10 ? 3 : Number(minTemp) <= 0 ? 2 : Number(minTemp) <= 5 ? 1 : 0);
+        
+        // Se il rischio freddo è uguale o maggiore del rischio caldo, usiamo la T_Min per la descrizione.
+        // Questo permette alla descrizione di menzionare il freddo estremo se è la causa principale.
+        if (coldRiskLevel >= hotRiskLevel) {
+            tempForDescription = minTemp; 
+        }
+    }
+     
+    // 4. Calcola la descrizione breve del rischio (usa la temperatura rilevante)
+    const riskDescription = getAlertRiskDescription(tempForDescription, precipitationSum, maxDailyWindSpeed, dailyAlertClass);
+ 
     
-    // Calcola la descrizione breve del rischio - QUESTO DEVE SEMPRE RESTITUIRE UNA STRINGA
-    const riskDescription = getAlertRiskDescription(dailyAvgTemp, precipitationSum, maxDailyWindSpeed, dailyAlertClass);
+    
     
     const alertStyles = getAlertStyles(dailyAlertColor);
     // Passa la riskDescription (che è una stringa)
