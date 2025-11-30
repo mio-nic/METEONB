@@ -340,7 +340,7 @@ const allQuestions = [
 },
 {
     question: "La pioggia che congela all'impatto con il terreno (o un oggetto) è chiamata...",
-    options: ["Pioviggine", "Neve granulosa", "Pioggia congelantesi", "Rugiada"],
+    options: ["Pioviggine", "Neve granulosa", "Pioggia congelante", "Rugiada"],
     answer: "Pioggia congelante"
 },
 {
@@ -354,3 +354,4 @@ const allQuestions = [
     answer: "Cristallogenesi"
 }
 ];
+
