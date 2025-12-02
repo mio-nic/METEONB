@@ -1,44 +1,29 @@
-// rise.js - Versione 3.9: Etichette Alba/Tramonto sotto il grafico con Tempo Rimanente (hh:mm)
+// rise.js - Versione Semplificata: Percorso Sole e Luna su linea orizzontale con CSS integrato.
+
+// --- IMPORTAZIONI (Deve essere compatibile con city.js) ---
+import { getCurrentCityLocalTime } from './city.js';
 
 // --- CONFIGURAZIONE E CONSTANTI ---
-const WEATHER_API_KEY = "e1f10a1e78da46f5b10a1e78da96f525";
+const WEATHER_API_KEY = "e1f10a1e78da46f5b10a1e78da96f525"; // USA LA TUA CHIAVE REALE QUI
 const PREFERRED_COORDS_KEY = 'preferredCityCoords';
 const DEFAULT_LATITUDE = 45.40;
 const DEFAULT_LONGITUDE = 11.87;
 
 // Elemento per la nota
 const notaElement = document.querySelector('.nota');
-// Elementi per le etichette esterne rimosse:
-// const sunLabelsContainer = document.getElementById('sunLabels'); 
-// const moonLabelsContainer = document.getElementById('moonLabels'); 
+// Elementi contenitore per i percorsi (riutilizzo degli ID del canvas)
+const sunPathElement = document.getElementById('sunChartCanvas'); 
+const moonPathElement = document.getElementById('moonChartCanvas'); 
 
-// Colori per il tema scuro (Dark Theme) per Chart.js
-const DARK_THEME_COLORS = {
-    fontColor: '#EEE',
-    gridColor: 'rgba(255, 255, 255, 0.15)',
-    horizonColor: 'rgba(102, 102, 102, 0.5)', 
-    
-    // Sole
-    sunLineCompletedColor: '#FFD700', 
-    sunLineFutureColor: 'rgba(255, 215, 0, 0.4)', 
-    sunFillColor: 'rgba(255, 215, 0, 0.1)', 
-    sunMarkerColor: '#FFD700', 
-    sunEndPointColor: '#FFF',
+// Variabili globali per i dati statici
+let graphDataToday = null; 
+let updateInterval = null; 
 
-    // Luna
-    moonLineCompletedColor: '#E0E0E0', 
-    moonLineFutureColor: 'rgba(224, 224, 224, 0.4)', 
-    moonFillColor: 'rgba(169, 169, 169, 0.05)',
-    moonMarkerColor: '#FFFFFF',
-    moonEndPointColor: '#FFF',
-};
+// --- FUNZIONI DI UTILITÀ ---
 
-// Variabili globali per le istanze dei grafici
-let sunChartInstance = null;
-let moonChartInstance = null;
-
-// --- FUNZIONI DI UTILITÀ (Aggiornate) ---
-
+/**
+ * Recupera le coordinate salvate in localStorage o usa i valori predefiniti.
+ */
 function getCoordinates() {
     const preferredCoordsStr = localStorage.getItem(PREFERRED_COORDS_KEY);
     
@@ -55,6 +40,9 @@ function getCoordinates() {
     return { lat: DEFAULT_LATITUDE, lon: DEFAULT_LONGITUDE };
 }
 
+/**
+ * Formatta la stringa di tempo UTC (es. "2025-01-01T12:00:00") in "HH:mm".
+ */
 function formatTime(timeString) {
     if (!timeString) return 'N/D';
     try {
@@ -65,12 +53,18 @@ function formatTime(timeString) {
     }
 }
 
+/**
+ * Converte l'ora nel formato "HH:mm" in minuti totali (0-1439).
+ */
 function timeToMinutes(timeString) {
     if (timeString === 'N/D') return NaN;
     const [hours, minutes] = timeString.split(':').map(Number);
     return (isNaN(hours) || isNaN(minutes)) ? NaN : hours * 60 + minutes;
 }
 
+/**
+ * Restituisce l'emoji della fase lunare.
+ */
 function getMoonEmoji(phase) {
     switch(phase) {
         case "Novilunio": return "🌑";
@@ -86,29 +80,26 @@ function getMoonEmoji(phase) {
 }
 
 /**
- * Calcola il tempo rimanente tra l'ora attuale e un orario futuro/passato.
- * @param {number} targetMinutes - Orario target in minuti (0-1440).
- * @param {number} currentMinutes - Orario attuale in minuti (0-1440).
- * @returns {string} Tempo rimanente in formato "hh:mm" con segno (+/-)
+ * Calcola il tempo rimanente fino all'evento target.
  */
 function calculateTimeRemaining(targetMinutes, currentMinutes) {
     let diff = targetMinutes - currentMinutes;
-
-    if (diff < -720) { // Se l'evento è avvenuto più di 12 ore fa, assumiamo che sia il giorno successivo
+    if (diff < -720) {
         diff += 1440;
-    } else if (diff > 720) { // Se l'evento è tra più di 12 ore, assumiamo che sia il giorno precedente
+    } else if (diff > 720) {
         diff -= 1440;
     }
-
     const sign = diff >= 0 ? '+' : '-';
     const absDiff = Math.abs(diff);
-    
     const hours = Math.floor(absDiff / 60);
     const minutes = absDiff % 60;
     
     return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
+/**
+ * Recupera i dati celesti (Alba/Tramonto) dall'API TWC per le coordinate attuali.
+ */
 async function getCelestialData() {
     const { lat, lon } = getCoordinates();
     const geocode = `${lat.toFixed(4)},${lon.toFixed(4)}`;
@@ -122,7 +113,7 @@ async function getCelestialData() {
     try {
         const response = await fetch(apiUrl);
         if (!response.ok) {
-            throw new Error(`Errore HTTP! Stato: ${response.status}. Controlla la API Key e il formato delle coordinate (${geocode}).`);
+            throw new Error(`Errore HTTP! Stato: ${response.status}.`);
         }
         const data = await response.json();
         return data;
@@ -134,302 +125,180 @@ async function getCelestialData() {
     }
 }
 
-// --- FUNZIONI GRAFICI AD ARCO GIORNALIERO ---
+// --- FUNZIONI DI INIEZIONE STILI CSS ---
 
 /**
- * Calcola la posizione Y sull'arco parabolico (Y = sin(Angolo)).
+ * Inietta gli stili CSS necessari per i percorsi Sole/Luna nella sezione <head> del documento.
  */
-function calculateArcY(currentMinutes, riseMinutes, setMinutes) {
-    if (isNaN(riseMinutes) || isNaN(setMinutes)) {
-        return NaN;
-    }
+function injectStyles() {
+    const styleId = 'rise-styles';
+    if (document.getElementById(styleId)) return; // Evita di iniettare due volte
 
-    const dayDuration = setMinutes - riseMinutes;
-    const nightDuration = 1440 - dayDuration;
+    // Aggiornamento CSS per l'icona dinamica: aumentiamo top a -25px per centrare l'emoji sulla linea.
+    const css = `
+        .path-container {
+            color: #EEE; 
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-top: 1px solid #333;
+        }
+        .path-container h3 {
+            font-size: 16px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .path-line {
+            height: 4px;
+            background-color: #444; 
+            position: relative;
+            margin: 20px 20px 40px; 
+            border-radius: 2px;
+        }
+        .time-marker {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            transform: translateX(-50%); 
+            text-align: center;
+            line-height: 1.2;
+            z-index: 5;
+        }
+        /* Marker di Alba/Levata: posizionato SOPRA la linea */
+        .rise-marker {
+            top: 10px; 
+            color: #d1ca00;
+        }
+        /* Marker di Tramonto/Tramontare: posizionato SOTTO la linea */
+        .set-marker {
+            top: 10px;
+            color: #d16200;
+        }
+        .time-remaining {
+            display: block;
+            font-size: 11px;
+            color: #AAA;
+            font-weight: normal;
+        }
+        .icon-now {
+            position: absolute;
+            top: -20px; /* Modificato: sposta l'emoji più in alto */
+            font-size: 24px; /* Modificato: aumenta la dimensione dell'emoji */
+            transform: translateX(-50%); 
+            z-index: 999; 
+            /* Rimosso 'color: #FF6347;' in quanto l'emoji usa il suo colore naturale */
+        }
+    `;
 
-    // Se l'oggetto è sopra l'orizzonte (tra rise e set)
-    if (currentMinutes >= riseMinutes && currentMinutes <= setMinutes) {
-        const timeFraction = (currentMinutes - riseMinutes) / dayDuration; 
-        return Math.sin(timeFraction * Math.PI) * 1.1; 
-    } 
-    
-    // Sotto l'orizzonte
-    let timeFraction;
-    let nightTime;
-
-    if (currentMinutes < riseMinutes) {
-        nightTime = currentMinutes + (1440 - setMinutes); 
-        timeFraction = nightTime / nightDuration;
-    } else {
-        nightTime = currentMinutes - setMinutes;
-        timeFraction = nightTime / nightDuration;
-    }
-
-    return Math.sin(Math.PI + timeFraction * Math.PI) * 0.5; 
+    const styleElement = document.createElement('style');
+    styleElement.id = styleId;
+    styleElement.textContent = css;
+    document.head.appendChild(styleElement);
 }
 
+// --- FUNZIONI DI RAPPRESENTAZIONE LINEA PERCORSO ---
+
 /**
- * Disegna il grafico giornaliero dell'arco per Sole o Luna.
+ * Genera l'HTML per il percorso del sole o della luna.
  */
-function drawDailyArcChart(config) {
-    const { canvasId, title, markerTime, riseTime, setTime, lineCompletedColor, lineFutureColor, fillArea, markerColor, endPointColor } = config;
-    const ctx = document.getElementById(canvasId);
-
-    if (!ctx || typeof Chart === 'undefined') return;
-
-    // Distrugge l'istanza precedente
-    const chartInstance = canvasId === 'sunChartCanvas' ? sunChartInstance : moonChartInstance;
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
-    
+function createPathHtml(riseTime, setTime, markerTime, emoji, title) {
     const riseMinutes = timeToMinutes(riseTime);
     const setMinutes = timeToMinutes(setTime);
     const currentMinutes = timeToMinutes(markerTime);
 
     if (isNaN(riseMinutes) || isNaN(setMinutes)) {
-         const chartDiv = ctx.parentElement;
-         chartDiv.innerHTML = `<p style="color:${DARK_THEME_COLORS.fontColor}; text-align:center;">${title} non disponibile per oggi.</p>`;
-         return;
+        return `<p style="color:#EEE; text-align:center;">${title} non disponibile per oggi.</p>`;
     }
-
-    // Calcolo tempo rimanente
+    
     const riseRemaining = calculateTimeRemaining(riseMinutes, currentMinutes);
     const setRemaining = calculateTimeRemaining(setMinutes, currentMinutes);
-    
-    // --- Preparazione dei dati (invariata) ---
-    const arcData = [];
-    const markerData = [];
-    const endPointsData = [];
 
-    // Genera punti ogni 30 minuti (24h)
-    for (let m = 0; m <= 1440; m += 30) {
-        const yValue = calculateArcY(m, riseMinutes, setMinutes);
-        arcData.push({ x: m, y: yValue });
+    // Calcolo della posizione del marker (0% a 00:00, 100% a 24:00)
+    const markerPosition = (currentMinutes / 1440) * 100; 
+    const risePosition = (riseMinutes / 1440) * 100;
+    const setPosition = (setMinutes / 1440) * 100;
+
+    return `
+        <div class="path-container">
+            <h3>${emoji} ${title} - Ora: ${markerTime}</h3>
+            <div class="path-line">
+                
+                <span class="icon-now" style="left: ${markerPosition}%;">
+                    ${emoji} </span>
+
+                <span class="time-marker rise-marker" style="left: ${risePosition}%;">
+                    ▲ ${riseTime}<br><span class="time-remaining">(${riseRemaining})</span>
+                </span>
+                
+                <span class="time-marker set-marker" style="left: ${setPosition}%;">
+                    ▼ ${setTime}<br><span class="time-remaining">(${setRemaining})</span>
+                </span>
+                
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Funzione per aggiornare il percorso del Sole.
+ */
+function updateSunPath(riseTime, setTime, markerTime) {
+    if (sunPathElement) {
+        sunPathElement.innerHTML = createPathHtml(riseTime, setTime, markerTime, '☀️', 'Sole - alba/tramonto');
     }
-    
-    // Divisione del percorso (invariata)
-    let closestIndex = arcData.reduce((closest, point, index) => {
-        if (Math.abs(point.x - currentMinutes) < Math.abs(arcData[closest].x - currentMinutes)) {
-            return index;
-        }
-        return closest;
-    }, 0);
-    
-    const currentPoint = { x: currentMinutes, y: calculateArcY(currentMinutes, riseMinutes, setMinutes) };
-    
-    const completedArcData = [...arcData.slice(0, closestIndex), currentPoint];
-    const futureArcData = [currentPoint, ...arcData.slice(closestIndex + 1)];
+}
 
-    endPointsData.push(
-        { x: riseMinutes, y: calculateArcY(riseMinutes, riseMinutes, setMinutes) }, 
-        { x: setMinutes, y: calculateArcY(setMinutes, riseMinutes, setMinutes) }   
-    );
-    markerData.push(currentPoint);
-
-    // --- Opzioni Grafico ---
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            title: {
-                display: true,
-                text: `${title}`,
-                color: DARK_THEME_COLORS.fontColor,
-                font: { size: 16 }
-            },
-            legend: { display: false },
-            tooltip: { enabled: false }, // Disabilita tooltip di default per pulizia
-
-            // === RISTABILITO IL PLUGIN ANNOTATION CON NUOVE POSIZIONI ===
-            annotation: {
-                annotations: {
-                    // Etichetta Alba/Sorgere
-                    riseLabel: {
-                        type: 'label',
-                        xValue: riseMinutes,
-                        yValue: -0.2, // Spostato sotto l'orizzonte (Y=0)
-                        content: [`▲ ${riseTime}`, `(${riseRemaining})`],
-                        color: DARK_THEME_COLORS.fontColor,
-                        font: { size: 12, weight: 'bold' },
-                        position: 'start',
-                        xAdjust: 5,
-                        yAdjust: 0,
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        borderColor: lineCompletedColor,
-                        borderWidth: 1,
-                        borderRadius: 4
-                    },
-                    // Etichetta Tramonto/Tramontare
-                    setLabel: {
-                        type: 'label',
-                        xValue: setMinutes,
-                        yValue: -0.2, // Spostato sotto l'orizzonte (Y=0)
-                        content: [`▼ ${setTime}`, `(${setRemaining})`],
-                        color: DARK_THEME_COLORS.fontColor,
-                        font: { size: 12, weight: 'bold' },
-                        position: 'end',
-                        xAdjust: -5,
-                        yAdjust: 0,
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        borderColor: lineCompletedColor,
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }
-                }
-            }
-        },
-        scales: {
-            x: {
-                display: true, // Riattivato l'asse X per allineare le annotazioni
-                type: 'linear',
-                min: 0,
-                max: 1440,
-                title: { display: false },
-                grid: { 
-                    display: false, // Griglia X (linee verticali) visibile
-                                    },
-                ticks: { display: false } // Rimosse le etichette orarie
-            },
-            y: {
-                display: true, 
-                min: -1.2, 
-                max: 1.2, 
-                ticks: { display: false },// Rimosse le etichette orarie
-                grid: {
-                    // Linea dell'Orizzonte (asse X a Y=0) - Tratteggiata e bianca
-                    color: (context) => context.tick.value === 0 ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
-                    drawOnChartArea: true,
-                    drawTicks: false,
-                    // Usa la funzione per disegnare la linea solo su Y=0
-                    lineWidth: (context) => context.tick.value === 0 ? 1.5 : 0, 
-                    // Aggiunge la tratteggiatura solo alla linea dell'orizzonte (Y=0)
-                    borderDash: (context) => context.tick.value === 0 ? [4, 4] : [], 
-                },
-            }
-        },
-    };
-
-    // Crea l'istanza del grafico (dataset invariati)
-    const newChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            datasets: [
-            // 1. Linea dell'Arco (Percorso Completo e Colorato)
-            {
-                label: 'Percorso Completo',
-                data: completedArcData,
-                borderColor: lineCompletedColor,
-                backgroundColor: fillArea,
-                borderWidth: 5, 
-                tension: 0.8, 
-                fill: (context) => {
-                    if (context.parsed && !isNaN(context.parsed.y)) {
-                        return context.parsed.y > 0 ? 'origin' : false; 
-                    }
-                    return false;
-                },
-                pointRadius: 0,
-                showLine: true,
-                spanGaps: true,
-                borderDash: []
-            },
-            // 2. Linea dell'Arco (Percorso Futuro e Tratteggiato)
-            {
-                label: 'Percorso Futuro',
-                data: futureArcData,
-                borderColor: lineFutureColor,
-                backgroundColor: 'transparent',
-                borderWidth: 2, 
-                tension: 0.8,
-                fill: false,
-                pointRadius: 0,
-                showLine: true,
-                spanGaps: true,
-                borderDash: [5, 5]
-            },
-            // 3. Pallini fissi Alba/Tramonto
-            {
-                label: 'Alba/Tramonto',
-                data: endPointsData,
-                backgroundColor: endPointColor,
-                borderColor: endPointColor,
-                pointRadius: 4, 
-                pointStyle: 'circle', 
-                showLine: false
-            },
-            // 4. Marcatore Posizione Attuale
-            {
-                label: 'Posizione Corrente',
-                data: markerData,
-                backgroundColor: markerColor,
-                borderColor: markerColor, 
-                pointRadius: 8,
-                pointStyle: 'circle', 
-                showLine: false
-            }
-            ]
-        },
-        options: options
-    });
-
-    if (canvasId === 'sunChartCanvas') {
-        sunChartInstance = newChartInstance;
-    } else {
-        moonChartInstance = newChartInstance;
+/**
+ * Funzione per aggiornare il percorso della Luna.
+ */
+function updateMoonPath(riseTime, setTime, moonPhase, markerTime) {
+    const emoji = getMoonEmoji(moonPhase);
+    if (moonPathElement) {
+        // Usa l'emoji di fase lunare specifica come indicatore sul percorso
+        updateMoonPath.currentEmoji = emoji; // Memorizza l'emoji attuale se necessario altrove
+        moonPathElement.innerHTML = createPathHtml(riseTime, setTime, markerTime, emoji, `Luna - alba/tramonto (${moonPhase})`);
     }
 }
 
 
+// --- FUNZIONI DI AGGIORNAMENTO DINAMICO ---
+
 /**
- * Funzione wrapper per il Sole
+ * Funzione per aggiornare solo i percorsi utilizzando l'ora del BROWSER + OFFSET CITTA'.
  */
-function drawDailySunArcChart(riseTime, setTime) {
-    const now = new Date();
-    const markerTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-    
-    // Rimosso l'aggiornamento del div esterno
-    
-    drawDailyArcChart({
-        canvasId: 'sunChartCanvas',
-        title: `☀️ Percorso Solare Oggi`,
-        markerTime: markerTime,
-        riseTime: riseTime,
-        setTime: setTime,
-        lineCompletedColor: DARK_THEME_COLORS.sunLineCompletedColor,
-        lineFutureColor: DARK_THEME_COLORS.sunLineFutureColor,
-        fillArea: DARK_THEME_COLORS.sunFillColor,
-        markerColor: DARK_THEME_COLORS.sunMarkerColor,
-        endPointColor: DARK_THEME_COLORS.sunEndPointColor 
-    });
+function updatePathsOnly() {
+    if (!graphDataToday || graphDataToday.utcOffsetSeconds === undefined) {
+        return;
+    }
+
+    // OTTIENI ORA LOCALE CORRETTA: usa l'offset memorizzato per chiamare la funzione da city.js
+    const currentLocalTime = getCurrentCityLocalTime(graphDataToday.utcOffsetSeconds);
+
+    // Aggiorna i percorsi usando i dati statici (Alba/Tramonto) e l'ora dinamica
+    updateSunPath(graphDataToday.sunRise, graphDataToday.sunSet, currentLocalTime);
+    updateMoonPath(graphDataToday.moonRise, graphDataToday.moonSet, graphDataToday.moonPhase, currentLocalTime);
 }
 
 /**
- * Funzione wrapper per la Luna
+ * Avvia o riavvia l'aggiornamento automatico dell'ora (ogni 60 secondi).
  */
-function drawDailyMoonArcChart(riseTime, setTime, moonPhase) {
-    const now = new Date();
-    const markerTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-    
-    // Rimosso l'aggiornamento del div esterno
-    
-    drawDailyArcChart({
-        canvasId: 'moonChartCanvas',
-        title: `${getMoonEmoji(moonPhase)} Percorso Lunare Oggi`,
-        markerTime: markerTime,
-        riseTime: riseTime,
-        setTime: setTime,
-        lineCompletedColor: DARK_THEME_COLORS.moonLineCompletedColor,
-        lineFutureColor: DARK_THEME_COLORS.moonLineFutureColor,
-        fillArea: DARK_THEME_COLORS.moonFillColor,
-        markerColor: DARK_THEME_COLORS.moonMarkerColor,
-        endPointColor: DARK_THEME_COLORS.moonEndPointColor
-    });
+function startAutoUpdate() {
+    // 1. ANNULLA qualsiasi intervallo di aggiornamento precedente
+    if (updateInterval !== null) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+    }
+
+    // 2. Imposta l'aggiornamento grafico ad intervalli regolari (ogni 60 secondi).
+    updateInterval = setInterval(updatePathsOnly, 60000); 
 }
 
+// --- FUNZIONE PRINCIPALE DI CARICAMENTO DATI ---
 
-// --- FUNZIONE PRINCIPALE ESPORTATA (invariata) ---
-export async function updateCelestialTable() {
+/**
+ * Funzione principale per caricare i dati statici API e popolare la tabella (chiamata all'inizio e al cambio città).
+ * Accetta l'offset UTC della città da city.js.
+ */
+export async function updateCelestialTable(utcOffsetSeconds = 0) { 
     const tableBody = document.getElementById('tabellaCorpo');
     const titolo = document.getElementById('titoloTabella');
     if (!tableBody || !titolo) return;
@@ -440,8 +309,6 @@ export async function updateCelestialTable() {
     
     if (dati.dayOfWeek && dati.dayOfWeek.length === 0) {
         titolo.textContent = "Dati Non Disponibili";
-        if (sunChartInstance) sunChartInstance.destroy();
-        if (moonChartInstance) moonChartInstance.destroy();
         return;
     }
 
@@ -450,7 +317,7 @@ export async function updateCelestialTable() {
     const finePeriodo = new Date(dati.validTimeLocal[giorniTotali - 1]).toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
     titolo.textContent = `Previsione ${giorniTotali} giorni (dal ${oggi} al ${finePeriodo})`;
 
-
+    // Popola la tabella
     tableBody.innerHTML = '';
     let todayData = {};
 
@@ -485,13 +352,37 @@ export async function updateCelestialTable() {
                 sunSet: tramontoSole,
                 moonRise: albaLuna,
                 moonSet: tramontoLuna,
-                moonPhase: faseLuna
+                moonPhase: dati.moonPhase[0],
+                utcOffsetSeconds: utcOffsetSeconds
             };
         }
     }
-
-    drawDailySunArcChart(todayData.sunRise, todayData.sunSet);
-    drawDailyMoonArcChart(todayData.moonRise, todayData.moonSet, todayData.moonPhase);
+    
+    // Memorizza i dati statici di oggi globalmente
+    graphDataToday = todayData;
+    
+    // 1. Aggiorna i percorsi immediatamente dopo il caricamento iniziale dei dati statici
+    updatePathsOnly(); 
+    
+    // 2. Riavvia l'aggiornamento dinamico dell'ora
+    startAutoUpdate(); 
 }
 
-document.addEventListener('DOMContentLoaded', updateCelestialTable);
+// --- BLOCCO AVVIO (DOMContentLoaded) ---
+
+/**
+ * Inizializza il sistema e avvia i processi.
+ */
+function initializeSystem() {
+    // 1. INIETTA GLI STILI CSS nel documento
+    injectStyles();
+    
+    // 2. Chiama la funzione principale di carico dati all'inizio.
+    updateCelestialTable(); 
+    
+    // 3. Avvia l'intervallo di aggiornamento
+    startAutoUpdate();
+}
+
+// Avvia tutto al caricamento del documento
+document.addEventListener('DOMContentLoaded', initializeSystem);
