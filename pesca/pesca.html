@@ -84,13 +84,12 @@ body { margin-top: 65px; } /* Aggiusta il margine se hai un header fisso */
     <a href="/METEONB/index.html" class="nav-link active"><i class="fas fa-home"></i> Home</a>
     <a href="https://meteofree.altervista.org/METEONB/notizie/notizie.php" class="nav-link"><i class="fas fa-database"></i> Notizie</a>
     <a href="/METEONB/radar/radar.html" class="nav-link"><i class="fas fa-satellite-dish"></i> Radar</a>
-    <a href="/METEONB/pre/pre.html" class="nav-link"><i class="fa-solid fa-list"></i> Stazione</a>
-    <a href="/METEONB/pesca/pesca.html" class="nav-link"><i class="fa-solid fa-list"></i> Pesca</a>
-    <a href="https://neige.meteociel.fr/satellite/anim_vis_it.gif" class="nav-link"><i class="fa-solid fa-list"></i> Satellite</a>
-    <a href="https://neige.meteociel.fr/satellite/anim_ir_color.gif" class="nav-link"><i class="fa-solid fa-list"></i> Satellite rgb</a>
-    <a href="https://www.tropicaltidbits.com/analysis/models/?model=ecmwf&region=eu&pkg=z500_mslp" class="nav-link"><i class="fa-solid fa-list"></i> Mappe</a>
-    <a href="/METEONB/quiz/quiz.html" class="nav-link"><i class="fa-solid fa-list"></i> Quiz</a>
-	  
+    <a href="/METEONB/pre/pre.html" class="nav-link"><i class="fas fa-satellite-dish"></i> Stazione</a>
+    <a href="/METEONB/pesca/pesca.html" class="nav-link"><i class="fas fa-satellite-dish"></i> Pesca</a>
+    <a href="https://neige.meteociel.fr/satellite/anim_vis_it.gif" class="nav-link"><i class="fas fa-satellite-dish"></i> Satellite</a>
+    <a href="https://neige.meteociel.fr/satellite/anim_ir_color.gif" class="nav-link"><i class="fas fa-satellite-dish"></i> Satellite rgb</a>
+    <a href="https://www.tropicaltidbits.com/analysis/models/?model=ecmwf&region=eu&pkg=z500_mslp" class="nav-link"><i class="fas fa-satellite-dish"></i> Mappe</a>
+
     <div class="sidebar-divider"></div>
     <span class="sidebar-footer">Versione: <span id="appVersion">1.0.0</span></span>
   </nav>
@@ -131,15 +130,11 @@ body { margin-top: 65px; } /* Aggiusta il margine se hai un header fisso */
 
 <div id="precipitationChartContainer" style="width: 100%; height: 200px;"></div>
       
-      <div class="charts-container" style="display: flex; justify-content: space-around; flex-wrap: wrap; margin-top: 20px;">
-    <div style="width: 48%; min-width: 300px; height: 350px; margin-bottom: 20px;">
-        <canvas id="sunChartCanvas"></canvas>
+     <div class="chart-wrapper">
+        <h3 class="chart-title" id="sunChartTitle">🎣 Attività di Pesca Oggi</h3>
+        <div id="sunChartCanvas" style="height: 180px;">
+            </div>
     </div>
-
-    <div style="width: 48%; min-width: 300px; height: 350px; margin-bottom: 20px;">
-        <canvas id="moonChartCanvas"></canvas>
-    </div>
-</div>
       
       <h3 id="titoloTabella">Caricamento dati celesti...</h3>
     
@@ -177,6 +172,4 @@ body { margin-top: 65px; } /* Aggiusta il margine se hai un header fisso */
 
     
 </body>
-
 </html>
-
