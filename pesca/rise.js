@@ -35,6 +35,7 @@ const DARK_THEME_COLORS = {
 };
 
 // Variabili globali per le istanze dei grafici
+// Mantengo le variabili, ma le distruggo e non le riassegno
 let sunChartInstance = null;
 let moonChartInstance = null;
 
@@ -239,298 +240,169 @@ function createFishingScoreHtml(score) {
     `;
 }
 
-// --- FUNZIONI GRAFICI AD ARCO GIORNALIERO (Non modificate) ---
+// --- NUOVA FUNZIONE: Icona del Pesce Animato ---
 
 /**
- * Calcola la posizione Y sull'arco parabolico (Y = sin(Angolo)).
+ * Genera l'icona del pesce animato da visualizzare al posto dei grafici.
+ * L'animazione dipende dal punteggio di pesca.
+ * @param {number} score - Punteggio di pesca (0-100) per determinare l'animazione.
+ * @returns {string} HTML/CSS per l'icona del pesce.
  */
-function calculateArcY(currentMinutes, riseMinutes, setMinutes) {
-    if (isNaN(riseMinutes) || isNaN(setMinutes)) {
-        return NaN;
-    }
-
-    const dayDuration = setMinutes - riseMinutes;
-    const nightDuration = 1440 - dayDuration;
-
-    // Se l'oggetto è sopra l'orizzonte (tra rise e set)
-    if (currentMinutes >= riseMinutes && currentMinutes <= setMinutes) {
-        const timeFraction = (currentMinutes - riseMinutes) / dayDuration; 
-        return Math.sin(timeFraction * Math.PI) * 1.1; 
-    } 
+function createFishingIconHtml(score) {
+    let fishIcon = '🐟'; // Icona base del pesce
+    let animationStyle = '';
+    let message = 'Attività bassa';
+    let containerClass = 'fishing-container';
     
-    // Sotto l'orizzonte
-    let timeFraction;
-    let nightTime;
-
-    if (currentMinutes < riseMinutes) {
-        nightTime = currentMinutes + (1440 - setMinutes); 
-        timeFraction = nightTime / nightDuration;
-    } else {
-        nightTime = currentMinutes - setMinutes;
-        timeFraction = nightTime / nightDuration;
-    }
-
-    return Math.sin(Math.PI + timeFraction * Math.PI) * 0.5; 
-}
-
-/**
- * Disegna il grafico giornaliero dell'arco per Sole o Luna.
- */
-function drawDailyArcChart(config) {
-    const { canvasId, title, markerTime, riseTime, setTime, lineCompletedColor, lineFutureColor, fillArea, markerColor, endPointColor } = config;
-    const ctx = document.getElementById(canvasId);
-
-    if (!ctx || typeof Chart === 'undefined') return;
-
-    // Distrugge l'istanza precedente
-    const chartInstance = canvasId === 'sunChartCanvas' ? sunChartInstance : moonChartInstance;
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
-    
-    const riseMinutes = timeToMinutes(riseTime);
-    const setMinutes = timeToMinutes(setTime);
-    const currentMinutes = timeToMinutes(markerTime);
-
-    if (isNaN(riseMinutes) || isNaN(setMinutes)) {
-           const chartDiv = ctx.parentElement;
-           chartDiv.innerHTML = `<p style="color:${DARK_THEME_COLORS.fontColor}; text-align:center;">${title} non disponibile per oggi.</p>`;
-           return;
-    }
-
-    // Calcolo tempo rimanente
-    const riseRemaining = calculateTimeRemaining(riseMinutes, currentMinutes);
-    const setRemaining = calculateTimeRemaining(setMinutes, currentMinutes);
-    
-    // --- Preparazione dei dati (invariata) ---
-    const arcData = [];
-    const markerData = [];
-    const endPointsData = [];
-
-    // Genera punti ogni 30 minuti (24h)
-    for (let m = 0; m <= 1440; m += 30) {
-        const yValue = calculateArcY(m, riseMinutes, setMinutes);
-        arcData.push({ x: m, y: yValue });
-    }
-    
-    // Divisione del percorso (invariata)
-    let closestIndex = arcData.reduce((closest, point, index) => {
-        if (Math.abs(point.x - currentMinutes) < Math.abs(arcData[closest].x - currentMinutes)) {
-            return index;
+    // Stili CSS di base (da definire in un file CSS o in uno <style> nel tuo HTML)
+    const baseCss = `
+        .fishing-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 150px;
+            color: ${DARK_THEME_COLORS.fontColor};
+            font-family: sans-serif;
+            text-align: center;
         }
-        return closest;
-    }, 0);
-    
-    const currentPoint = { x: currentMinutes, y: calculateArcY(currentMinutes, riseMinutes, setMinutes) };
-    
-    const completedArcData = [...arcData.slice(0, closestIndex), currentPoint];
-    const futureArcData = [currentPoint, ...arcData.slice(closestIndex + 1)];
+        .fishing-icon {
+            font-size: 80px;
+            display: inline-block;
+            transition: transform 0.5s ease-in-out;
+        }
 
-    endPointsData.push(
-        { x: riseMinutes, y: calculateArcY(riseMinutes, riseMinutes, setMinutes) }, 
-        { x: setMinutes, y: calculateArcY(setMinutes, riseMinutes, setMinutes) } 
-    );
-    markerData.push(currentPoint);
+        /* Animazioni Custom */
+        @keyframes subtle-float {
+            0% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-5px) rotate(1deg); }
+            100% { transform: translateY(0) rotate(0); }
+        }
+        @keyframes active-swim {
+            0% { transform: translateX(0) rotate(-5deg); }
+            25% { transform: translateX(5px) rotate(0deg); }
+            50% { transform: translateX(0) rotate(5deg); }
+            75% { transform: translateX(-5px) rotate(0deg); }
+            100% { transform: translateX(0) rotate(-5deg); }
+        }
+    `;
 
-    // --- Opzioni Grafico ---
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            title: {
-                display: true,
-                text: `${title}`,
-                color: DARK_THEME_COLORS.fontColor,
-                font: { size: 16 }
-            },
-            legend: { display: false },
-            tooltip: { enabled: false }, // Disabilita tooltip di default per pulizia
 
-            // === RISTABILITO IL PLUGIN ANNOTATION CON NUOVE POSIZIONI ===
-            annotation: {
-                annotations: {
-                    // Etichetta Alba/Sorgere
-                    riseLabel: {
-                        type: 'label',
-                        xValue: riseMinutes,
-                        yValue: -0.2, // Spostato sotto l'orizzonte (Y=0)
-                        content: [`▲ ${riseTime}`, `(${riseRemaining})`],
-                        color: DARK_THEME_COLORS.fontColor,
-                        font: { size: 12, weight: 'bold' },
-                        position: 'start',
-                        xAdjust: 5,
-                        yAdjust: 0,
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        borderColor: lineCompletedColor,
-                        borderWidth: 1,
-                        borderRadius: 4
-                    },
-                    // Etichetta Tramonto/Tramontare
-                    setLabel: {
-                        type: 'label',
-                        xValue: setMinutes,
-                        yValue: -0.2, // Spostato sotto l'orizzonte (Y=0)
-                        content: [`▼ ${setTime}`, `(${setRemaining})`],
-                        color: DARK_THEME_COLORS.fontColor,
-                        font: { size: 12, weight: 'bold' },
-                        position: 'end',
-                        xAdjust: -5,
-                        yAdjust: 0,
-                        backgroundColor: 'rgba(0,0,0,0.4)',
-                        borderColor: lineCompletedColor,
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }
-                }
-            }
-        },
-        scales: {
-            x: {
-                display: true, // Riattivato l'asse X per allineare le annotazioni
-                type: 'linear',
-                min: 0,
-                max: 1440,
-                title: { display: false },
-                grid: { 
-                    display: false, // Griglia X (linee verticali) visibile
-                                        },
-                ticks: { display: false } // Rimosse le etichette orarie
-            },
-            y: {
-                display: true, 
-                min: -1.2, 
-                max: 1.2, 
-                ticks: { display: false },// Rimosse le etichette orarie
-                grid: {
-                    // Linea dell'Orizzonte (asse X a Y=0) - Tratteggiata e bianca
-                    color: (context) => context.tick.value === 0 ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
-                    drawOnChartArea: true,
-                    drawTicks: false,
-                    // Usa la funzione per disegnare la linea solo su Y=0
-                    lineWidth: (context) => context.tick.value === 0 ? 1.5 : 0, 
-                    // Aggiunge la tratteggiatura solo alla linea dell'orizzonte (Y=0)
-                    borderDash: (context) => context.tick.value === 0 ? [4, 4] : [], 
-                },
-            }
-        },
-    };
-
-    // Crea l'istanza del grafico (dataset invariati)
-    const newChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            datasets: [
-            // 1. Linea dell'Arco (Percorso Completo e Colorato)
-            {
-                label: 'Percorso Completo',
-                data: completedArcData,
-                borderColor: lineCompletedColor,
-                backgroundColor: fillArea,
-                borderWidth: 5, 
-                tension: 0.8, 
-                fill: (context) => {
-                    if (context.parsed && !isNaN(context.parsed.y)) {
-                        return context.parsed.y > 0 ? 'origin' : false; 
-                    }
-                    return false;
-                },
-                pointRadius: 0,
-                showLine: true,
-                spanGaps: true,
-                borderDash: []
-            },
-            // 2. Linea dell'Arco (Percorso Futuro e Tratteggiato)
-            {
-                label: 'Percorso Futuro',
-                data: futureArcData,
-                borderColor: lineFutureColor,
-                backgroundColor: 'transparent',
-                borderWidth: 2, 
-                tension: 0.8,
-                fill: false,
-                pointRadius: 0,
-                showLine: true,
-                spanGaps: true,
-                borderDash: [5, 5]
-            },
-            // 3. Pallini fissi Alba/Tramonto
-            {
-                label: 'Alba/Tramonto',
-                data: endPointsData,
-                backgroundColor: endPointColor,
-                borderColor: endPointColor,
-                pointRadius: 4, 
-                pointStyle: 'circle', 
-                showLine: false
-            },
-            // 4. Marcatore Posizione Attuale
-            {
-                label: 'Posizione Corrente',
-                data: markerData,
-                backgroundColor: markerColor,
-                borderColor: markerColor, 
-                pointRadius: 8,
-                pointStyle: 'circle', 
-                showLine: false
-            }
-            ]
-        },
-        options: options
-    });
-
-    if (canvasId === 'sunChartCanvas') {
-        sunChartInstance = newChartInstance;
+    if (score >= 80) {
+        // Ottima pesca: pesce molto attivo (nuoto veloce e frequente)
+        fishIcon = '🐠'; // Pesce più attivo o colorato
+        animationStyle = 'active-swim 0.7s infinite alternate;';
+        message = 'ATTIVITÀ ECCELLENTE!';
+        containerClass += ' excellent';
+    } else if (score >= 50) {
+        // Buona pesca: pesce che galleggia/nuota dolcemente
+        fishIcon = '🐟';
+        animationStyle = 'subtle-float 2s infinite alternate;';
+        message = 'Attività buona';
+        containerClass += ' good';
+    } else if (score >= 20) {
+         // Pesca media: pesce quasi fermo
+        fishIcon = '🐡';
+        animationStyle = 'subtle-float 4s infinite alternate;';
+        message = 'Attività moderata';
+        containerClass += ' moderate';
     } else {
-        moonChartInstance = newChartInstance;
+        // Poca attività
+        fishIcon = '🎣'; // Anziché il pesce, l'amo vuoto o un pesce triste
+        message = 'Attività molto bassa';
+        containerClass += ' poor';
     }
+    
+    // Controlla se gli elementi del grafico sono ancora presenti e li nasconde
+    // Il CSS deve essere iniettato o già presente nell'HTML.
+    const styleTag = document.getElementById('fishing-styles');
+    if (!styleTag) {
+        const head = document.head || document.getElementsByTagName('head')[0];
+        const style = document.createElement('style');
+        style.id = 'fishing-styles';
+        style.textContent = baseCss;
+        head.appendChild(style);
+    }
+
+    return `
+        <div class="${containerClass}">
+            <span class="fishing-icon" style="animation: ${animationStyle}">${fishIcon}</span>
+            <p style="margin-top: 5px; font-weight: bold;">${message}</p>
+        </div>
+    `;
 }
 
+// --- FUNZIONI GRAFICI AD ARCO GIORNALIERO (RIMOSSE/SOSTITUITE) ---
+
+/**
+ * [RIMOSSA] Calcola la posizione Y sull'arco parabolico (Y = sin(Angolo)).
+ * (Non più necessaria)
+ */
+/*
+function calculateArcY(currentMinutes, riseMinutes, setMinutes) {
+    ... codice rimosso ...
+}
+*/
+
+/**
+ * [RIMOSSA] Disegna il grafico giornaliero dell'arco per Sole o Luna.
+ * (Sostituita dalla funzione che aggiunge l'icona)
+ */
+/*
+function drawDailyArcChart(config) {
+    ... codice rimosso ...
+}
+*/
 
 /**
  * Funzione wrapper per il Sole
+ * [MODIFICATA] Ora inserisce l'icona del Pesce nel container del Sole (sunChartCanvas).
  */
-function drawDailySunArcChart(riseTime, setTime) {
-    const now = new Date();
-    const markerTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+function drawDailySunArcChart(riseTime, setTime, moonPhase) {
+    const sunChartContainer = document.getElementById('sunChartCanvas');
+    if (!sunChartContainer) return;
+
+    // Distrugge l'istanza precedente del grafico se esistente
+    if (sunChartInstance) {
+        sunChartInstance.destroy();
+        sunChartInstance = null;
+    }
     
-    // Rimosso l'aggiornamento del div esterno
-    
-    drawDailyArcChart({
-        canvasId: 'sunChartCanvas',
-        title: `☀️ Percorso Solare Oggi`,
-        markerTime: markerTime,
-        riseTime: riseTime,
-        setTime: setTime,
-        lineCompletedColor: DARK_THEME_COLORS.sunLineCompletedColor,
-        lineFutureColor: DARK_THEME_COLORS.sunLineFutureColor,
-        fillArea: DARK_THEME_COLORS.sunFillColor,
-        markerColor: DARK_THEME_COLORS.sunMarkerColor,
-        endPointColor: DARK_THEME_COLORS.sunEndPointColor 
-    });
+    const fishingScore = calculateFishingScore(riseTime, setTime, moonPhase);
+    const fishingIconHtml = createFishingIconHtml(fishingScore);
+
+    // Sostituisce il canvas con l'icona del pesce.
+    // **NOTA:** Questo richiede che l'elemento 'sunChartCanvas' sia un contenitore
+    // (ad esempio, un <div>) e non direttamente il <canvas> di Chart.js.
+    // Se fosse un <canvas>, è necessario sostituirlo con un <div> con lo stesso ID.
+    sunChartContainer.innerHTML = fishingIconHtml;
+    // Rimuove la necessità di un'intestazione separata per il grafico
+    const chartTitle = sunChartContainer.closest('.chart-wrapper').querySelector('.chart-title');
+    if (chartTitle) chartTitle.textContent = '🎣 Attività di Pesca Oggi';
+
+    // Rimuoviamo anche il contenitore del grafico lunare, se esiste
+    const moonChartContainer = document.getElementById('moonChartCanvas');
+    if (moonChartContainer) {
+        if (moonChartInstance) {
+            moonChartInstance.destroy();
+            moonChartInstance = null;
+        }
+        moonChartContainer.style.display = 'none'; // Nascondi o rimuovi il contenitore della Luna
+        const moonTitle = moonChartContainer.closest('.chart-wrapper').querySelector('.chart-title');
+        if (moonTitle) moonTitle.style.display = 'none';
+    }
 }
 
 /**
  * Funzione wrapper per la Luna
+ * [RIMOSSA] (Inclusa la sua logica per l'eliminazione/nascondimento in drawDailySunArcChart)
  */
+/*
 function drawDailyMoonArcChart(riseTime, setTime, moonPhase) {
-    const now = new Date();
-    const markerTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-    
-    // Rimosso l'aggiornamento del div esterno
-    
-    drawDailyArcChart({
-        canvasId: 'moonChartCanvas',
-        title: `${getMoonEmoji(moonPhase)} Percorso Lunare Oggi`,
-        markerTime: markerTime,
-        riseTime: riseTime,
-        setTime: setTime,
-        lineCompletedColor: DARK_THEME_COLORS.moonLineCompletedColor,
-        lineFutureColor: DARK_THEME_COLORS.moonLineFutureColor,
-        fillArea: DARK_THEME_COLORS.moonFillColor,
-        markerColor: DARK_THEME_COLORS.moonMarkerColor,
-        endPointColor: DARK_THEME_COLORS.moonEndPointColor
-    });
+    ... codice rimosso ...
 }
+*/
 
 
 // --- FUNZIONE PRINCIPALE ESPORTATA (Modificata) ---
@@ -546,6 +418,7 @@ export async function updateCelestialTable() {
     
     if (dati.dayOfWeek && dati.dayOfWeek.length === 0) {
         titolo.textContent = "Dati Non Disponibili";
+        // Distrugge le istanze Chart.js anche in caso di errore
         if (sunChartInstance) sunChartInstance.destroy();
         if (moonChartInstance) moonChartInstance.destroy();
         return;
@@ -557,8 +430,6 @@ export async function updateCelestialTable() {
     titolo.textContent = `Previsione ${giorniTotali} giorni (dal ${oggi} al ${finePeriodo})`;
 
     // AGGIUNTA DELL'INTESTAZIONE "PESCA"
-    // Questo assume che la struttura HTML abbia un <thead> con id="tabellaHeader" o che tu lo aggiungerai.
-    // Se la tabella è definita come <table><thead><tr id="tabellaHeader">...</tr></thead><tbody>...</tbody></table>
     if (!tableHeader.innerHTML.includes('<th>Pesca</th>')) {
         const existingHeaderRow = tableHeader.querySelector('tr');
         // Inserisce '<th>Pesca</th>' dopo '<th>Giorno</th>'
@@ -599,7 +470,8 @@ export async function updateCelestialTable() {
         const riga = document.createElement('tr');
         riga.innerHTML = `
             <td>${giornoLabel}</td>
-            <td class="pesca">${fishingHtml}</td> <td class="sole">${albaSole}</td>
+            <td class="pesca">${fishingHtml}</td>
+            <td class="sole">${albaSole}</td>
             <td class="sole">${tramontoSole}</td>
             <td class="luna">${albaLuna}</td>
             <td class="luna">${tramontoLuna}</td>
@@ -613,12 +485,16 @@ export async function updateCelestialTable() {
                 sunSet: tramontoSole,
                 moonRise: albaLuna,
                 moonSet: tramontoLuna,
-                moonPhase: faseLuna
+                moonPhase: faseLuna,
+                fishingScore: fishingScore // Salviamo anche il punteggio di pesca di oggi
             };
         }
     }
 
-    drawDailySunArcChart(todayData.sunRise, todayData.sunSet);
-    drawDailyMoonArcChart(todayData.moonRise, todayData.moonSet, todayData.moonPhase);
+    // [MODIFICATO] Chiama la funzione che ora inserisce l'icona del pesce al posto del grafico solare
+    drawDailySunArcChart(todayData.sunRise, todayData.sunSet, todayData.moonPhase);
+    
+    // [RIMOSSO] La chiamata a drawDailyMoonArcChart è stata rimossa,
+    // e la sua funzionalità di distruzione/nascondimento è in drawDailySunArcChart
+    // drawDailyMoonArcChart(todayData.moonRise, todayData.moonSet, todayData.moonPhase);
 }
-
