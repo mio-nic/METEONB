@@ -11,6 +11,36 @@ let chartUpdateInterval = null;
 let selectedCityLocation = null;
 
 
+// city.js (Nuova funzione di utilità da esportare)
+
+/**
+ * Calcola e restituisce l'ora locale esatta della città utilizzando l'offset UTC.
+ * @param {number} utcOffsetSeconds - Offset UTC in secondi della città.
+ * @returns {string} L'ora attuale nel formato "HH:mm".
+ */
+export function getCurrentCityLocalTime(utcOffsetSeconds) {
+    if (utcOffsetSeconds === undefined || utcOffsetSeconds === null) {
+        // Fallback all'ora del browser se l'offset non è disponibile
+        const now = new Date();
+        return String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    }
+    
+    // Ottiene il timestamp UTC attuale (dal dispositivo)
+    const nowUtc = Date.now();
+    
+    // Calcola il timestamp locale corretto della città
+    const nowLocalTimestamp = nowUtc + utcOffsetSeconds * 1000;
+    
+    // Crea un oggetto Date con il timestamp corretto
+    const localDateForCity = new Date(nowLocalTimestamp);
+    
+    // Formatta l'ora nel formato HH:mm
+    const hours = String(localDateForCity.getUTCHours()).padStart(2, '0');
+    const minutes = String(localDateForCity.getUTCMinutes()).padStart(2, '0');
+    
+    return `${hours}:${minutes}`;
+}
+
 // --- 1. FUNZIONE DI RENDERING GRAFICO HIGHCHARTS (LOCALE) ---
 
 /**
@@ -88,7 +118,7 @@ const drawPrecipitationChartLocal = (hourlyData, utcOffsetSeconds, containerId) 
 
         if (categoryIndex !== -1) {
             // Posizione al centro della colonna
-            const plotLineValue = categoryIndex + 0.5;
+            const plotLineValue = categoryIndex + 0;
 
             // Rimuove la vecchia linea se esiste
             chart.xAxis[0].removePlotLine('current-time-line');
@@ -311,7 +341,7 @@ window.initData = async (location = null) => {
         
         if (lastUpdate) lastUpdate.textContent = `Aggiornato il ${dateForCityLocalTime.toLocaleDateString('it-IT')} alle ${dateForCityLocalTime.toLocaleTimeString('it-IT')}.`;
         if (locationName) locationName.textContent = `${cityName}`;
-        updateCelestialTable();
+        updateCelestialTable(utcOffsetSeconds);
 
         // 5. Ritorna al display del messaggio dopo il successo
         toggleSearchDisplay(false); 
