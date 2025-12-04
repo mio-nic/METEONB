@@ -24,8 +24,8 @@ const getIconNumberFromData = (precipitation, cloudCover, windSpeed, precipProb,
     
     if (precipitation >= 0.1 && temperature_2m < 1) { return 13; }
     if (precipProb >= 70 && windSpeed >= 30) { return 8; }
-    if (precipitation >= 5.0) { return 7; }
-    if (precipitation >= 0.5) { return 6; }
+    if (precipitation >= 10) { return 7; }
+    if (precipitation >= 2) { return 6; }
     if (precipitation >= 0.1) { return 5; }
     if (cloudCover >= 80) { return 4; }
     if (cloudCover >= 50) { return 3; }
@@ -321,4 +321,5 @@ export const formatTime = (timeString, timeZone = undefined) => {
         minute: '2-digit',
         timeZone: timeZone 
     });
+
 };
