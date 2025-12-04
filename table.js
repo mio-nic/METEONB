@@ -22,17 +22,17 @@ const getWeatherAlertStatus = (weatherCode, maxTemp, minTemp, precipitation, win
 
     // ROSSO (MAX RISK)
     // Se la Max è >= 38 O la Min è <= -10 O vento >= 50 O pioggia >= 50
-    if (tMax >= 38 || tMin <= -10 || w >= 50 || p >= 50) {
+    if (tMax >= 40 || tMin <= -15 || w >= 50 || p >= 50) {
         alertLevel = 3; // Rosso
     } 
     // ARANCIONE (HIGH RISK)
     // Se la Max è >= 33 O la Min è <= 0 O vento >= 25 O pioggia >= 30
-    else if (tMax >= 33 || tMin <= 0 || w >= 25 || p >= 30) {
+    else if (tMax >= 35 || tMin <= -5 || w >= 35 || p >= 35) {
         alertLevel = 2; // Arancione
     } 
     // GIALLO (LOW RISK)
     // Se la Max è >= 28 O la Min è <= 5 O vento >= 10 O pioggia >= 1
-    else if (tMax >= 28 || tMin <= 5 || w >= 10 || p >= 1) {
+    else if (tMax >= 33 || tMin <= 5 || w >= 15 || p >= 25) {
         alertLevel = 1; // Giallo
     }
 
@@ -66,8 +66,8 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
 
     // Allerta Rossa (Rischio Alto)
     if (statusClass === 'dot-discreto') {
-    	if (t >= 38) risks.push('Caldo Estremo (colpo di calore)');
-        if (t <= -10) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
+    	if (t >= 40) risks.push('Caldo Estremo (colpo di calore)');
+        if (t <= -15) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
         if (w >= 50) risks.push('vento molto forte (>50km/h)');
         if (p >= 50) risks.push('piogge torrenziali (>50mm)');
         if (risks.length > 0) return `Rischio Estremo di ${risks.join(' e/o ')}`;
@@ -75,19 +75,19 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
 
     // Allerta Arancione (Rischio Moderato/Alto)
     if (statusClass === 'dot-allerta') {
-        if (t >= 33) risks.push('Caldo intenso (disagio moderato)');
-        if (t <= 0) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
-        if (w >= 30) risks.push('vento forte (>30km/h)');
-        if (p >= 25) risks.push('piogge intense (>30mm)');
+        if (t >= 35) risks.push('Caldo intenso (disagio moderato)');
+        if (t <= -5) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
+        if (w >= 35) risks.push('vento forte (>35km/h)');
+        if (p >= 35) risks.push('piogge intense (>35mm)');
         if (risks.length > 0) return `Rischio Alto di ${risks.join(', ')}`;
     }
 
     // Allerta Gialla (Rischio Basso)
     if (statusClass === 'dot-buono') {
-        if (t >= 28) risks.push('Caldo (disagio lieve)');
+        if (t >= 33) risks.push('Caldo (disagio lieve)');
         if (t <= 5) risks.push('freddo (temperatura <5°C)');
-        if (w >= 10) risks.push('raffiche di vento (>10km/h)');
-        if (p >= 1) risks.push('pioggia (>1mm)');
+        if (w >= 15) risks.push('raffiche di vento (>15km/h)');
+        if (p >= 25) risks.push('pioggia (>25mm)');
         if (risks.length > 0) return `Rischio basso di ${risks.join(', ')}`;
     }
     
@@ -714,6 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initData();
 
 });
+
 
 
 
