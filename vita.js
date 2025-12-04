@@ -11,7 +11,7 @@ import { getWeatherData } from './main.js';
 const THRESHOLDS = {
     // Caldo (Temp Max)
     'HOT': {
-        RED: 38, ORANGE: 34, YELLOW: 28,
+        RED: 40, ORANGE: 35, YELLOW: 33,
         title: 'Caldo', unit: '°C',
         desc: {
             4: 'Caldo Estremo. Rischio di COLPO DI CALORE.',
@@ -21,7 +21,7 @@ const THRESHOLDS = {
     },
     // Freddo (Temp Min)
     'COLD': {
-        RED: -5, ORANGE: 0, YELLOW: 4,
+        RED: -15, ORANGE: -5, YELLOW: 4,
         title: 'Freddo', unit: '°C',
         desc: {
             4: 'Freddo Estremo. RISCHIO GELO, DANNI STRUTTURALI e ipotermia grave.',
@@ -31,7 +31,7 @@ const THRESHOLDS = {
     },
     // Vento (Vento Max in km/h)
     'WIND': {
-        RED: 50, ORANGE: 20, YELLOW: 10,
+        RED: 50, ORANGE: 35, YELLOW: 15,
         title: 'Vento', unit: 'km/h',
         desc: {
             4: 'Vento Estremo. Pericolo per strutture (RISCHIO CROLLO) e oggetti non fissati.',
@@ -41,7 +41,7 @@ const THRESHOLDS = {
     },
     // Pioggia (Precipitazioni in mm)
     'RAIN': {
-        RED: 50, ORANGE: 25, YELLOW: 5,
+        RED: 50, ORANGE: 35, YELLOW: 25,
         title: 'Piogge', unit: 'mm',
         desc: {
             4: 'Pioggia Estrema. ALTO RISCHIO IDROGEOLOGICO, ALLUVIONE e inondazioni gravi.',
@@ -661,6 +661,7 @@ export function getComfortChartInstance() {
 
 
 export const updateVisuals = updateComfortTable;
+
 
 
 
