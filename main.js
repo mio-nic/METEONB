@@ -24,7 +24,7 @@ const getIconNumberFromData = (precipitation, cloudCover, windSpeed, precipProb,
     
     if (precipitation >= 0.1 && temperature_2m < 1) { return 13; }
     if (precipProb >= 70 && windSpeed >= 30) { return 8; }
-    if (precipitation >= 10) { return 7; }
+    if (precipitation >= 5.0) { return 7; }
     if (precipitation >= 2) { return 6; }
     if (precipitation >= 0.1) { return 5; }
     if (cloudCover >= 80) { return 4; }
@@ -44,8 +44,8 @@ export const getWeatherEmoji = (data, index) => {
 };
 
 export const getDailyWeatherEmoji = (data, index) => {
-    const { precipitation_sum, cloud_cover_mean, wind_speed_10m_max, temperature_2m_min, precipitation_probability_max } = data;
-    const iconNumber = getIconNumberFromData(precipitation_sum[index], cloud_cover_mean[index], wind_speed_10m_max[index], precipitation_probability_max[index], temperature_2m_min[index]);
+    const { precipitation_sum, cloud_cover_mean, wind_speed_10m_max, temperature_2m_max, precipitation_probability_max } = data;
+    const iconNumber = getIconNumberFromData(precipitation_sum[index], cloud_cover_mean[index], wind_speed_10m_max[index], precipitation_probability_max[index], temperature_2m_max[index]);
     return createIconTag(iconNumber, 'Meteo Giornaliero');
 };
 
@@ -321,5 +321,4 @@ export const formatTime = (timeString, timeZone = undefined) => {
         minute: '2-digit',
         timeZone: timeZone 
     });
-
 };
