@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusClass = getWeatherAlertStatus(hourlyWeatherCode, temp, precipitationSum, wind, false);
             
             // CORREZIONE CRITICA: Chiama getWeatherEmoji passando i dati orari e l'indice assoluto
-            const weatherEmoji = getWeatherEmoji(hourlyData, absoluteIndex);
+            const weatherEmoji = getWeatherEmoji(hourlyData, absoluteIndex, precipitationSum);
 
             const row = document.createElement('tr');
             
@@ -228,5 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initData();
 
 });
+
 
 
