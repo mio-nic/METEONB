@@ -33,9 +33,20 @@ const getIconNumberFromData = (precipitation, cloudCover, windSpeed, precipProb,
     return 1;
 };
 
-export const getWeatherEmoji = (data, index) => {
+export const getWeatherEmoji = (data, index, overridePrecipitation = null) => {
     const { precipitation, cloud_cover, wind_speed_10m, precipitation_probability, temperature_2m, time } = data;
-    const iconNumber = getIconNumberFromData(precipitation[index], cloud_cover[index], wind_speed_10m[index], precipitation_probability[index], temperature_2m[index]);
+    
+    // LOGICA CRITICA: Se overridePrecipitation è fornito (somma trioraria), usa quello.
+    // Altrimenti usa il dato della singola ora.
+    const currentPrecipitation = (overridePrecipitation !== null) ? overridePrecipitation : precipitation[index];
+
+    const iconNumber = getIconNumberFromData(
+        currentPrecipitation, 
+        cloud_cover[index], 
+        wind_speed_10m[index], 
+        precipitation_probability[index], 
+        temperature_2m[index]
+    );
     const date = new Date(time[index]);
     const hour = date.getHours(); 
     const isNight = hour >= 18 || hour < 6;
