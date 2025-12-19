@@ -16,7 +16,7 @@ const getIconNumberFromData = (precipitation, cloudCover, windSpeed, precipProb,
     if (precipitation >= 0.1 && temperature_2m < 1) { return 13; }
     if (precipProb >= 70 && windSpeed >= 30) { return 8; }
     if (precipitation >= 5.0) { return 7; }
-    if (precipitation >= 0.5) { return 6; }
+    if (precipitation >= 2.0) { return 6; }
     if (precipitation >= 0.1) { return 5; }
     if (cloudCover >= 80) { return 4; }
     if (cloudCover >= 50) { return 3; }
@@ -49,12 +49,12 @@ const getHourlyWeatherIcon = (data, index, numericHour) => {
 
 const getDressSuggestion = (temp) => {
     const t = Number(temp);
-    if (t >= 30) { return `Costume`; } else if (t >= 25) { return `T-shirt`; } else if (t >= 20) { return `Maglietta`; } else if (t >= 15) { return `Felpa`; } else if (t >= 10) { return `Giacca leggera`; } else if (t >= 5) { return `Giubbotto pesante`; } else { return `Cappotto imbottito.`; }
+    if (t >= 30) { return `Costume`; } else if (t >= 25) { return `T-shirt`; } else if (t >= 20) { return `Maglietta`; } else if (t >= 15) { return `Felpa`; } else if (t >= 8) { return `Giacca leggera`; } else if (t >= 5) { return `Giubbotto pesante`; } else { return `Cappotto imbottito.`; }
 };
 
 const getTempColorClass = (temp) => {
     const t = Number(temp);
-    if (t >= 30) { return "col-extreme"; } else if (t >= 25) { return "col-hot"; } else if (t >= 20) { return "col-mild"; } else if (t >= 15) { return "col-fresh"; } else if (t >= 10) { return "col-cold"; } else if (t >= 5) { return "col-freezing"; } else { return "col-intense"; }
+    if (t >= 30) { return "col-extreme"; } else if (t >= 25) { return "col-hot"; } else if (t >= 20) { return "col-mild"; } else if (t >= 15) { return "col-fresh"; } else if (t >= 8) { return "col-cold"; } else if (t >= 5) { return "col-freezing"; } else { return "col-intense"; }
 };
 
 /**
@@ -314,4 +314,5 @@ export const generateHourlyDressTable = (allData) => {
 
     // 6. Inserisce la tabella nel DOM
     container.innerHTML = tableHtml;
+
 };
