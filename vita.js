@@ -11,7 +11,7 @@ import { getWeatherData } from './main.js';
 const THRESHOLDS = {
     // Caldo (Temp Max)
     'HOT': {
-        RED: 40, ORANGE: 35, YELLOW: 33,
+        RED: 45, ORANGE: 40, YELLOW: 35,
         title: 'Caldo', unit: '°C',
         desc: {
             4: 'Caldo Estremo. Rischio di COLPO DI CALORE.',
@@ -31,7 +31,7 @@ const THRESHOLDS = {
     },
     // Vento (Vento Max in km/h)
     'WIND': {
-        RED: 50, ORANGE: 35, YELLOW: 15,
+        RED: 80, ORANGE: 50, YELLOW: 35,
         title: 'Vento', unit: 'km/h',
         desc: {
             4: 'Vento Estremo. Pericolo per strutture (RISCHIO CROLLO) e oggetti non fissati.',
@@ -41,7 +41,7 @@ const THRESHOLDS = {
     },
     // Pioggia (Precipitazioni in mm)
     'RAIN': {
-        RED: 50, ORANGE: 35, YELLOW: 25,
+        RED: 100, ORANGE: 80, YELLOW: 50,
         title: 'Piogge', unit: 'mm',
         desc: {
             4: 'Pioggia Estrema. ALTO RISCHIO IDROGEOLOGICO, ALLUVIONE e inondazioni gravi.',
@@ -61,10 +61,10 @@ const PARAMETERS_MAP = [
 
 // MODIFICATO: Rimosse emoji e modificato il formato della label in ALLERTA [LIVELLO]
 const LEVEL_MAP = {
-    4: { color: '#ff3b30', label: 'ALLERTA ROSSA', short: 'ROSSA' },
-    3: { color: '#ff9500', label: 'ALLERTA ARANCIONE', short: 'ARANCIONE' },
-    2: { color: '#ffcc00', label: 'ALLERTA GIALLA', short: 'GIALLA' },
-    1: { color: '#34c759', label: 'ALLERTA VERDE', short: 'VERDE' }
+    4: { color: '#ff3b30', label: 'RISCHIO ALTO', short: 'ROSSA' },
+    3: { color: '#ff9500', label: 'RISCHIO MODERATO', short: 'ARANCIONE' },
+    2: { color: '#ffcc00', label: 'RISCHIO BASSO', short: 'GIALLA' },
+    1: { color: '#34c759', label: 'NESSUN RISCHIO', short: 'VERDE' }
 };
 
 // **********************************************************
@@ -478,7 +478,7 @@ window.showAlertDetails = (dateStr, alertKey, level, value) => {
     // Struttura Dati - Pop-up
     const modalDetailsHTML = `
         <div class="alert-modal-header" style="border-bottom-color: ${levelInfo.color};">
-            <h4>⚠️Allerta ${titleText}</h4>
+            <h4>⚠️Avviso ${titleText}</h4>
         </div>
         <div class="alert-modal-body">
             <p><strong>DATA:</strong> ${fullDate}</p>
@@ -661,27 +661,3 @@ export function getComfortChartInstance() {
 
 
 export const updateVisuals = updateComfortTable;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
