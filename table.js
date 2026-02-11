@@ -21,18 +21,18 @@ const getWeatherAlertStatus = (weatherCode, maxTemp, minTemp, precipitation, win
     const w = Number(windSpeed) || 0; 
 
     // ROSSO (MAX RISK)
-    // Se la Max è >= 38 O la Min è <= -10 O vento >= 50 O pioggia >= 50
-    if (tMax >= 40 || tMin <= -15 || w >= 50 || p >= 50) {
+    // Se la Max è >= 45 O la Min è <= -20 O vento >= 50 O pioggia >= 100
+    if (tMax >= 45 || tMin <= -20 || w >= 80 || p >= 100) {
         alertLevel = 3; // Rosso
     } 
     // ARANCIONE (HIGH RISK)
-    // Se la Max è >= 33 O la Min è <= 0 O vento >= 25 O pioggia >= 30
-    else if (tMax >= 35 || tMin <= -5 || w >= 35 || p >= 35) {
+    // Se la Max è >= 40 O la Min è <= 0 O vento >= 25 O pioggia >= 30
+    else if (tMax >= 40 || tMin <= -10 || w >= 50 || p >= 80) {
         alertLevel = 2; // Arancione
     } 
     // GIALLO (LOW RISK)
     // Se la Max è >= 28 O la Min è <= 5 O vento >= 10 O pioggia >= 1
-    else if (tMax >= 33 || tMin <= 5 || w >= 15 || p >= 25) {
+    else if (tMax >= 35 || tMin <= 4 || w >= 35 || p >= 50) {
         alertLevel = 1; // Giallo
     }
 
@@ -66,28 +66,28 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
 
     // Allerta Rossa (Rischio Alto)
     if (statusClass === 'dot-discreto') {
-    	if (t >= 40) risks.push('Caldo Estremo (colpo di calore)');
-        if (t <= -15) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
-        if (w >= 50) risks.push('vento molto forte (>50km/h)');
-        if (p >= 50) risks.push('piogge torrenziali (>50mm)');
+    	if (t >= 45) risks.push('Caldo Estremo (colpo di calore)');
+        if (t <= -20) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
+        if (w >= 80) risks.push('vento molto forte (>80km/h)');
+        if (p >= 100) risks.push('piogge torrenziali (>100mm)');
         if (risks.length > 0) return `Rischio Estremo di ${risks.join(' e/o ')}`;
     }
 
     // Allerta Arancione (Rischio Moderato/Alto)
     if (statusClass === 'dot-allerta') {
-        if (t >= 35) risks.push('Caldo intenso (disagio moderato)');
-        if (t <= -5) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
-        if (w >= 35) risks.push('vento forte (>35km/h)');
-        if (p >= 35) risks.push('piogge intense (>35mm)');
+        if (t >= 40) risks.push('Caldo intenso (disagio moderato)');
+        if (t <= -10) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
+        if (w >= 50) risks.push('vento forte (>50km/h)');
+        if (p >= 80) risks.push('piogge intense (>80mm)');
         if (risks.length > 0) return `Rischio Alto di ${risks.join(', ')}`;
     }
 
     // Allerta Gialla (Rischio Basso)
     if (statusClass === 'dot-buono') {
-        if (t >= 33) risks.push('Caldo (disagio lieve)');
-        if (t <= 5) risks.push('freddo (temperatura <5°C)');
-        if (w >= 15) risks.push('raffiche di vento (>15km/h)');
-        if (p >= 25) risks.push('pioggia (>25mm)');
+        if (t >= 35) risks.push('Caldo (disagio lieve)');
+        if (t <= 4) risks.push('freddo (temperatura <4°C)');
+        if (w >= 35) risks.push('raffiche di vento (>35km/h)');
+        if (p >= 50) risks.push('pioggia (>50mm)');
         if (risks.length > 0) return `Rischio basso di ${risks.join(', ')}`;
     }
     
@@ -107,19 +107,19 @@ const getAlertDescription = (statusClass, riskDescription) => {
 
     switch (statusClass) {
         case 'dot-discreto': return { 
-            title: 'ALLERTA ROSSA', 
+            title: 'RISCHIO ELEVATO', 
             description: `${desc}. Condizioni Estreme: Massima cautela richiesta.` 
         };
         case 'dot-allerta': return { 
-            title: 'ALLERTA ARANCIONE', 
+            title: 'RISCHIO MODERATO', 
             description: `${desc}. Possibili disagi, si consiglia attenzione.` 
         };
         case 'dot-buono': return { 
-            title: 'ALLERTA GIALLA', 
+            title: 'RISCHIO BASSO', 
             description: `${desc}. Condizioni variabili. Si consiglia cautela.` 
         };
         default: return { 
-            title: 'NESSUNA ALLERTA', 
+            title: 'NESSUNA RISCHIO', 
             description: `${desc}. Buona giornata!` 
         };
     }
@@ -714,7 +714,3 @@ document.addEventListener('DOMContentLoaded', () => {
     initData();
 
 });
-
-
-
-
