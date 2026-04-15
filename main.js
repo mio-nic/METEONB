@@ -23,7 +23,7 @@ const createIconTag = (iconNumber, altText = 'Icona Meteo') => {
 const getIconNumberFromData = (precipitation, cloudCover, windSpeed, precipProb, temperature_2m) => {
     
     if (precipitation >= 0.1 && temperature_2m < 1) { return 13; }
-    if (precipProb >= 70 && windSpeed >= 30) { return 8; }
+    if (precipProb >= 80 && windSpeed >= 35) { return 8; }
     if (precipitation >= 5.0) { return 7; }
     if (precipitation >= 2) { return 6; }
     if (precipitation >= 0.1) { return 5; }
@@ -62,11 +62,9 @@ export const getDailyWeatherEmoji = (data, index) => {
 
 export const precipitationEmojiMap = (mm) => {
     if (mm < 0.1) return '⚫';
-    if (mm < 2) return '🔵';
-    if (mm < 10) return '🟢';
-    if (mm < 20) return '🟡';
-    if (mm < 50) return '🔴';
-    return '🟣';
+    if (mm < 25) return '🔵';
+    if (mm < 50) return '🟡';
+    return '🔴';
 };
 
 
