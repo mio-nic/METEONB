@@ -11,7 +11,7 @@ import { generateHourlyDressTable } from './dress.js';
 
 // --- FUNZIONI DI UTILITÀ (Alert e Descrizione) ---
 
-const getWeatherAlertStatus = (weatherCode, maxTemp, minTemp, precipitation, windSpeed) => {
+const getWeatherAlertStatus = (maxTemp, minTemp, precipitation, windSpeed) => {
     let alertLevel = 0;
     
     // Inizializzazione e conversione dei valori
@@ -37,10 +37,10 @@ const getWeatherAlertStatus = (weatherCode, maxTemp, minTemp, precipitation, win
     }
 
     switch (alertLevel) {
-        case 3: return 'dot-discreto'; // Rosso
-        case 2: return 'dot-allerta'; // Arancione
-        case 1: return 'dot-buono'; // Giallo
-        default: return 'dot-ottimo';
+        case 3: return 'dot-rosso'; // Rosso
+        case 2: return 'dot-arancione'; // Arancione
+        case 1: return 'dot-giallo'; // Giallo
+        default: return 'dot-verde';
     }
 };
 
@@ -55,7 +55,7 @@ const getWeatherAlertStatus = (weatherCode, maxTemp, minTemp, precipitation, win
  */
 const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) => {
     // CORREZIONE 1: Gestione esplicita di dot-ottimo per evitare undefined
-    if (statusClass === 'dot-ottimo') {
+    if (statusClass === 'dot-verde') {
         return 'Condizioni normali';
     }
 
@@ -65,7 +65,7 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
     const w = Number(windSpeed) || 0;
 
     // Allerta Rossa (Rischio Alto)
-    if (statusClass === 'dot-discreto') {
+    if (statusClass === 'dot-rosso') {
     	if (t >= 45) risks.push('Caldo Estremo (colpo di calore)');
         if (t <= -20) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
         if (w >= 80) risks.push('vento molto forte (>80km/h)');
@@ -74,8 +74,8 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
     }
 
     // Allerta Arancione (Rischio Moderato/Alto)
-    if (statusClass === 'dot-allerta') {
-        if (t >= 40) risks.push('Caldo intenso (disagio moderato)');
+    if (statusClass === 'dot-arancione') {
+        if (t >= 40) risks.push('Caldo intenso (forte disagio)');
         if (t <= -10) risks.push('Ghiaccio/Freddo Estremo (sottozero)');
         if (w >= 50) risks.push('vento forte (>50km/h)');
         if (p >= 80) risks.push('piogge intense (>80mm)');
@@ -83,8 +83,8 @@ const getAlertRiskDescription = (temp, precipitation, windSpeed, statusClass) =>
     }
 
     // Allerta Gialla (Rischio Basso)
-    if (statusClass === 'dot-buono') {
-        if (t >= 35) risks.push('Caldo (disagio lieve)');
+    if (statusClass === 'dot-giallo') {
+        if (t >= 35) risks.push('Caldo (disagio moderato)');
         if (t <= 4) risks.push('freddo (temperatura <4°C)');
         if (w >= 35) risks.push('raffiche di vento (>35km/h)');
         if (p >= 50) risks.push('pioggia (>50mm)');
@@ -106,15 +106,15 @@ const getAlertDescription = (statusClass, riskDescription) => {
     const desc = riskDescription || 'Dati non disponibili o allerta non specificata.';
 
     switch (statusClass) {
-        case 'dot-discreto': return { 
+        case 'dot-rosso': return { 
             title: 'RISCHIO ELEVATO', 
             description: `${desc}. Condizioni Estreme: Massima cautela richiesta.` 
         };
-        case 'dot-allerta': return { 
+        case 'dot-arancione': return { 
             title: 'RISCHIO MODERATO', 
             description: `${desc}. Possibili disagi, si consiglia attenzione.` 
         };
-        case 'dot-buono': return { 
+        case 'dot-giallo': return { 
             title: 'RISCHIO BASSO', 
             description: `${desc}. Condizioni variabili. Si consiglia cautela.` 
         };
@@ -127,9 +127,9 @@ const getAlertDescription = (statusClass, riskDescription) => {
 
 const getAlertHexColor = (statusClass) => {
     switch (statusClass) {
-        case 'dot-discreto': return '#FF0000'; // Rosso
-        case 'dot-allerta': return '#FFA500'; // Arancione
-        case 'dot-buono': return '#FFFF00'; // Giallo
+        case 'dot-rosso': return '#FF0000'; // Rosso
+        case 'dot-arancione': return '#FFA500'; // Arancione
+        case 'dot-giallo': return '#FFFF00'; // Giallo
         default: return '#32CD32'; // Verde
     }
 };
@@ -260,18 +260,18 @@ const getAlertStyles = (alertColor) => {
             }
             
             /* Elementi di stato */
-            .status-dot.dot-ottimo { background-color: #32CD32; }
-            .status-dot.dot-buono { background-color: #FFFF00; }
-            .status-dot.dot-allerta { background-color: #FFA500; }
-            .status-dot.dot-discreto { background-color: #FF0000; }
+            .status-dot.dot-verde { background-color: #32CD32; }
+            .status-dot.dot-giallo { background-color: #FFFF00; }
+            .status-dot.dot-arancione { background-color: #FFA500; }
+            .status-dot.dot-rosso { background-color: #FF0000; }
             .hidden { display: none !important; }
         </style>
     `;
 };
 
-// ... (Resto delle funzioni di utilità omesso per brevità) ...
+
 const getCurrentWeatherDescriptionFromData = (precipitation, cloudCover, windSpeed, precipProb, temperature_2m) => {
-    if (precipProb >= 70 && windSpeed >= 30) { return "temporale"; }
+    if (precipProb >= 80 && windSpeed >= 35) { return "temporale"; }
     if (precipitation >= 0.1 && temperature_2m < 2) { return "neve"; }
     if (precipitation >= 5.0) { return "pioggia forte"; }
     if (precipitation >= 2.0) { return "pioggia"; }
@@ -304,7 +304,7 @@ const renderAlertCard = (dailyAlertClass, dailyAlertColor, riskDescription) => {
     // Il parametro riskDescription è garantito di essere una stringa da renderCurrentWeatherCard
     const alertInfo = getAlertDescription(dailyAlertClass, riskDescription);
     let symbol = '⚠'; 
-    if (dailyAlertClass === 'dot-ottimo') {
+    if (dailyAlertClass === 'dot-verde') {
         symbol = '✔'; 
     }
 
@@ -324,6 +324,7 @@ const renderAlertCard = (dailyAlertClass, dailyAlertColor, riskDescription) => {
 const renderCurrentWeatherCard = (allData, currentTimeIndex) => {
     const dailyData = allData.daily;
     const hourlyData = allData.hourly;
+    
     
     const getHourlyValue = (key, index) => {
         if (index === -1 || !hourlyData || !hourlyData[key] || index >= hourlyData[key].length) { return "N/D"; }
@@ -354,13 +355,7 @@ const renderCurrentWeatherCard = (allData, currentTimeIndex) => {
     // --- NUOVA LOGICA DI ALLERTA (Corretta e Unificata) ---
     
     // 1. Dichiara la variabile *una sola volta*
-    const dailyAlertClass = getWeatherAlertStatus(
-        null, 
-        maxTemp, 
-        minTemp, 
-        precipitationSum, 
-        maxDailyWindSpeed
-    );
+    const dailyAlertClass = getWeatherAlertStatus(maxTemp, minTemp, precipitationSum, maxDailyWindSpeed);
     
     // 2. Calcola il colore
     const dailyAlertColor = getAlertHexColor(dailyAlertClass);
@@ -368,7 +363,7 @@ const renderCurrentWeatherCard = (allData, currentTimeIndex) => {
     // 3. Logica per determinare quale temperatura usare nella descrizione (Max o Min)
     let tempForDescription = maxTemp; 
      
-    if (dailyAlertClass !== 'dot-ottimo') {
+    if (dailyAlertClass !== 'dot-verde') {
         // Logica per confrontare i livelli di rischio Freddo vs Caldo/Vento/Pioggia
         // NOTA: I livelli di rischio per vento/pioggia vengono trattati in modo implicito come rischio caldo
         const hotRiskLevel = (Number(maxTemp) >= 38 ? 3 : Number(maxTemp) >= 33 ? 2 : Number(maxTemp) >= 28 ? 1 : 0);
