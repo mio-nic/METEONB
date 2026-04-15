@@ -631,7 +631,7 @@ export const updateComfortTable = async (data = null) => {
 
 
     // 3. COSTRUZIONE FINALE DELLA STRUTTURA
-    const titleHTML = `<h3 style="color: var(--primary-color); text-align: center; margin-bottom: 5px; font-size: 1.4em; text-shadow: 0 0 5px rgba(66, 161, 255, 0.4);">ALLERTA METEO</h3>`;
+    const titleHTML = `<h3 style="color: var(--primary-color); text-align: center; margin-bottom: 5px; font-size: 1.4em; text-shadow: 0 0 5px rgba(66, 161, 255, 0.4);">CRITICITÀ METEO</h3>`;
     let tableHTML = `
         <table class="daily-analysis-table" style="margin-top: 10px;">
             <thead>
