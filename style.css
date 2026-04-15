@@ -311,22 +311,22 @@ body.page-with-fixed-header .container {
 }
 
 /* Colori in base allo stato */
-.dot-ottimo {
+.dot-verde {
     background-color: #28a745; /* Verde: Basso Rischio */
     box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
 }
 
-.dot-buono {
+.dot-giallo {
     background-color: #ffc107; /* Giallo: Rischio Moderato */
     box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
 }
 
-.dot-allerta {
+.dot-arancione {
     background-color: #ff8c00; /* Arancione: Alto Rischio */
     box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.7);
 }
 
-.dot-discreto {
+.dot-rosso {
     background-color: #dc3545; /* Rosso: Rischio Massimo */
     box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
 }
