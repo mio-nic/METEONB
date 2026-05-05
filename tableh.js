@@ -9,20 +9,20 @@ const getWeatherAlertStatus = (weatherCode, temp, precipitation, windSpeed, isDa
     let alertLevel = 0;
 
     // Livello 3 (DISCRETO/CRITICO) - Vento estremo o precipitazioni altissime (sostituisce temporale)
-    if (windSpeed >= 80 || precipitation >= (isDaily ? 50 : 15)) {
+    if (windSpeed >= 80 || precipitation >= (isDaily ? 50 : 35)) {
         alertLevel = 3; 
     }
     
     // Livello 2 (ALLERTA) - Vento forte, Pioggia forte o temperature sotto zero
     if (alertLevel < 3) {
-        if (windSpeed >= 50 || precipitation >= (isDaily ? 35 : 10) || temp <= -1) {
+        if (windSpeed >= 50 || precipitation >= (isDaily ? 35 : 25)) {
              alertLevel = 2; 
         }
     }
 
     // Livello 1 (BUONO) - Vento moderato, Pioggia moderata o temperature basse
     if (alertLevel < 2) {
-        if (windSpeed >= 35 || precipitation >= (isDaily ? 20 : 5) || temp < 5) {
+        if (windSpeed >= 35 || precipitation >= (isDaily ? 20 : 15) || temp < 5) {
             alertLevel = 1;
         }
     }
