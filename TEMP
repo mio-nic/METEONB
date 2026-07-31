@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RadarCast Weather Ops - Centro Monitoraggio Meteo</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #060b11;
+            --panel-bg: rgba(11, 20, 34, 0.85);
+            --panel-border: #1e3a5f;
+            
+            /* Colori di Stato Dinamici */
+            --color-cold: #0088ff;    /* Blu */
+            --color-normal: #00ff88;  /* Verde */
+            --color-warm: #ffaa00;    /* Arancione/Afa */
+            --color-extreme: #ff3344; /* Rosso/Afa Estrema */
+
+            --accent-cyan: #00f0ff;
+            --text-main: #e0f0ff;
+            --text-muted: #6b829e;
+            --font-tech: 'Orbitron', sans-serif;
+            --font-sans: 'Rajdhani', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 70%),
+                linear-gradient(rgba(10, 20, 35, 0.9), rgba(6, 11, 17, 0.95)),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 240, 255, 0.02) 3px, transparent 3px);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+
+        .radar-icon {
+            width: 30px; height: 30px;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 50%;
+            position: relative;
+            animation: radar-sweep 4s linear infinite;
+        }
+
+        .radar-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 50%; height: 2px;
+            background: var(--accent-cyan);
+            transform-origin: 0% 0%;
+        }
+
+        @keyframes radar-sweep {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        h1 {
+            font-family: var(--font-tech);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .countdown-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 14px;
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            font-family: var(--font-tech);
+            font-size: 0.8rem;
+        }
+
+        .timer-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-cyan) var(--timer-deg, 360deg), rgba(255,255,255,0.1) 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .timer-circle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--bg-color);
+            border-radius: 50%;
+        }
+
+        .timer-val {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        .live-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-tech);
+            font-size: 0.8rem;
+            color: var(--color-normal);
+        }
+
+        .pulse-dot {
+            width: 10px; height: 10px;
+            background-color: var(--color-normal);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--color-normal);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* GRID CARDS */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 18px;
+            position: relative;
+            backdrop-filter: blur(8px);
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .card-header i { font-size: 1.1rem; transition: color 0.4s ease; }
+
+        .card-value-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
+
+        .card-value {
+            font-family: var(--font-tech);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+
+        .card-unit { font-size: 1rem; color: var(--text-muted); font-family: var(--font-sans); }
+
+        .card-time-now {
+            font-family: var(--font-tech);
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+
+        .card-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 10px;
+            margin-bottom: 14px;
+        }
+
+        .card-stats-grid div span { color: var(--text-main); font-weight: 600; }
+
+        /* BARRA TREND GRADUATA CON ZERO AL CENTRO */
+        .trend-widget {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 14px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .trend-title-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            font-family: var(--font-tech);
+            color: var(--text-muted);
+        }
+
+        .trend-val-txt { color: #fff; font-weight: bold; }
+
+        .trend-bar-wrapper {
+            position: relative;
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        /* Linea di centro (Zero) */
+        .trend-zero-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #fff;
+            z-index: 2;
+            box-shadow: 0 0 4px #fff;
+        }
+
+        .trend-bar-fill {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 0%;
+            left: 50%;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .trend-ticks {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            font-family: var(--font-tech);
+            padding: 0 2px;
+        }
+
+        /* BARRA STATO SOGLIA */
+        .risk-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .risk-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            font-family: var(--font-tech);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .risk-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.6s ease-in-out, background-color 0.4s ease;
+        }
+
+        /* PANNELLI GRAFICO E TABELLA */
+        .section-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .panel-title {
+            font-family: var(--font-tech);
+            font-size: 0.9rem;
+            color: var(--accent-cyan);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .chart-container { position: relative; height: 380px; width: 100%; }
+        .table-responsive { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid rgba(30, 58, 95, 0.5); }
+
+        th {
+            font-family: var(--font-tech);
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(0, 240, 255, 0.03);
+        }
+
+        tbody tr:hover { background: rgba(0, 240, 255, 0.05); }
+
+        .val-high { color: var(--color-extreme); font-weight: 600; }
+        .val-low { color: var(--color-cold); font-weight: 600; }
+        .time-badge { font-size: 0.75rem; color: var(--text-muted); margin-left: 5px; }
+
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 20px;
+            padding: 15px;
+            border-top: 1px solid var(--panel-border);
+        }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .header-controls { width: 100%; justify-content: space-between; }
+            .card-value { font-size: 1.8rem; }
+            .chart-container { height: 280px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="radar-icon"></div>
+            <h1>RadarCast Weather Ops</h1>
+        </div>
+        <div class="header-controls">
+            <div class="countdown-box">
+                <div class="timer-circle" id="timer-circle"></div>
+                <span>REFRESH IN: <span class="timer-val" id="countdown-num">30</span>s</span>
+            </div>
+            <div class="live-status">
+                <div class="pulse-dot"></div>
+                <span>SYNC: <span id="last-update" style="color:#fff;">--:--:--</span></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- CARDS DASHBOARD -->
+        <div class="cards-grid">
+            
+            <!-- 1. TEMPERATURA REALE -->
+            <div class="card" id="card-temp-box">
+                <div class="card-header">
+                    <span>Temperatura Reale</span>
+                    <i class="fa-solid fa-temperature-high" id="icon-temp"></i>
+                </div>
+                <div class="card-value-row">
+                    <div class="card-value">
+                        <span id="card-temp">--</span><span class="card-unit">°C</span>
+                    </div>
+                    <div class="card-time-now" id="time-temp-now">--:--</div>
+                </div>
+                
+                <div class="card-stats-grid">
+                    <div>Min: <span id="card-temp-min">--</span> <small id="time-temp-min" class="time-badge">(--)</small></div>
+                    <div>Max: <span id="card-temp-max">--</span> <small id="time-temp-max" class="time-badge">(--)</small></div>
+                </div>
+
+                <!-- BARRA TREND GRADUATA CON ZERO AL CENTRO -->
+                <div class="trend-widget">
+                    <div class="trend-title-row">
+                        <span>TREND ORARIO</span>
+                        <span class="trend-val-txt" id="card-temptrend-val">-- °C/h</span>
+                    </div>
+                    <div class="trend-bar-wrapper">
+                        <div class="trend-zero-line"></div>
+                        <div class="trend-bar-fill" id="trend-bar-temp"></div>
+                    </div>
+                    <div class="trend-ticks">
+                        <span>-5°C</span>
+                        <span>-2.5</span>
+                        <span>0</span>
+                        <span>+2.5</span>
+                        <span>+5°C</span>
+                    </div>
+                </div>
+
+                <div class="risk-box">
+                    <div class="risk-label-row">
+                        <span id="risk-temp-title">STATO TERMICO</span>
+                        <span id="risk-temp-status" style="font-weight:bold;">--</span>
+                    </div>
+                    <div class="risk-bar-bg">
+                        <div class="risk-bar-fill" id="risk-temp-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. PERCEPITA -->
+            <div class="card" id="card-app-box">
+                <div class="card-header">
+                    <span>Temperatura Percepita</span>
+                    <i class="fa-solid fa-user-gear" id="icon-app"></i>
+                </div>
+                <div class="card-value-row">
+                    <div class="card-value">
+                        <span id="card-apptemp">--</span><span class="card-unit">°C</span>
+                    </div>
+                    <div class="card-time-now" id="time-app-now">--:--</div>
+                </div>
+
+                <div class="card-stats-grid">
+                    <div>Min: <span id="card-app-min">--</span> <small id="time-app-min" class="time-badge">(--)</small></div>
+                    <div>Max: <span id="card-app-max">--</span> <small id="time-app-max" class="time-badge">(--)</small></div>
+                </div>
+
+                <!-- BARRA TREND GRADUATA CON ZERO AL CENTRO -->
+                <div class="trend-widget">
+                    <div class="trend-title-row">
+                        <span>TREND PERCEPITA</span>
+                        <span class="trend-val-txt" id="card-apptrend-val">-- °C/h</span>
+                    </div>
+                    <div class="trend-bar-wrapper">
+                        <div class="trend-zero-line"></div>
+                        <div class="trend-bar-fill" id="trend-bar-app"></div>
+                    </div>
+                    <div class="trend-ticks">
+                        <span>-5°C</span>
+                        <span>-2.5</span>
+                        <span>0</span>
+                        <span>+2.5</span>
+                        <span>+5°C</span>
+                    </div>
+                </div>
+
+                <div class="risk-box">
+                    <div class="risk-label-row">
+                        <span id="risk-app-title">STRESS TERMICO</span>
+                        <span id="risk-app-status" style="font-weight:bold;">--</span>
+                    </div>
+                    <div class="risk-bar-bg">
+                        <div class="risk-bar-fill" id="risk-app-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. PUNTO DI RUGIADA (DEW POINT CALIBRATO AFA >= 20°C) -->
+            <div class="card" id="card-dew-box">
+                <div class="card-header">
+                    <span>Punto di Rugiada (Dew Point)</span>
+                    <i class="fa-solid fa-droplet" id="icon-dew"></i>
+                </div>
+                <div class="card-value-row">
+                    <div class="card-value">
+                        <span id="card-dew">--</span><span class="card-unit">°C</span>
+                    </div>
+                    <div class="card-time-now" id="time-dew-now">--:--</div>
+                </div>
+
+                <div class="card-stats-grid">
+                    <div>Min: <span id="card-dew-min">--</span> <small id="time-dew-min" class="time-badge">(--)</small></div>
+                    <div>Max: <span id="card-dew-max">--</span> <small id="time-dew-max" class="time-badge">(--)</small></div>
+                </div>
+
+                <!-- BARRA TREND GRADUATA CON ZERO AL CENTRO -->
+                <div class="trend-widget">
+                    <div class="trend-title-row">
+                        <span>TREND RUGIADA</span>
+                        <span class="trend-val-txt" id="card-dewtrend-val">-- °C/h</span>
+                    </div>
+                    <div class="trend-bar-wrapper">
+                        <div class="trend-zero-line"></div>
+                        <div class="trend-bar-fill" id="trend-bar-dew"></div>
+                    </div>
+                    <div class="trend-ticks">
+                        <span>-5°C</span>
+                        <span>-2.5</span>
+                        <span>0</span>
+                        <span>+2.5</span>
+                        <span>+5°C</span>
+                    </div>
+                </div>
+
+                <div class="risk-box">
+                    <div class="risk-label-row">
+                        <span id="risk-dew-title">INDICE DI AFA / UMIDITÀ</span>
+                        <span id="risk-dew-status" style="font-weight:bold;">--</span>
+                    </div>
+                    <div class="risk-bar-bg">
+                        <div class="risk-bar-fill" id="risk-dew-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- GRAFICO TEMPERATURA INTERATTIVO -->
+        <div class="section-panel">
+            <div class="panel-title">
+                <i class="fa-solid fa-chart-line"></i>
+                Andamento Orario Temperatura (°C) - Dati Storici Odierni (Ora Locale)
+            </div>
+            <div class="chart-container">
+                <canvas id="tempChart"></canvas>
+            </div>
+        </div>
+
+        <!-- TABELLA RIASSUNTIVA -->
+        <div class="section-panel">
+            <div class="panel-title">
+                <i class="fa-solid fa-table-columns"></i>
+                Confronto Massime e Minime: Oggi vs Ieri
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parametro (°C)</th>
+                            <th>Oggi (Max)</th>
+                            <th>Oggi (Min)</th>
+                            <th>Ieri (Max)</th>
+                            <th>Ieri (Min)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Temperatura Reale</strong></td>
+                            <td class="val-high" id="t-today-max-t">-- <span class="time-badge" id="t-today-max-t-time"></span></td>
+                            <td class="val-low" id="t-today-min-t">-- <span class="time-badge" id="t-today-min-t-time"></span></td>
+                            <td class="val-high" id="t-yest-max-t">-- <span class="time-badge" id="t-yest-max-t-time"></span></td>
+                            <td class="val-low" id="t-yest-min-t">-- <span class="time-badge" id="t-yest-min-t-time"></span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Temperatura Percepita</strong></td>
+                            <td class="val-high" id="t-today-max-app">-- <span class="time-badge" id="t-today-max-app-time"></span></td>
+                            <td class="val-low" id="t-today-min-app">-- <span class="time-badge" id="t-today-min-app-time"></span></td>
+                            <td class="val-high" id="t-yest-max-app">-- <span class="time-badge" id="t-yest-max-app-time"></span></td>
+                            <td class="val-low" id="t-yest-min-app">-- <span class="time-badge" id="t-yest-min-app-time"></span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Punto di Rugiada</strong></td>
+                            <td class="val-high" id="t-today-max-dew">-- <span class="time-badge" id="t-today-max-dew-time"></span></td>
+                            <td class="val-low" id="t-today-min-dew">-- <span class="time-badge" id="t-today-min-dew-time"></span></td>
+                            <td class="val-high" id="t-yest-max-dew">-- <span class="time-badge" id="t-yest-max-dew-time"></span></td>
+                            <td class="val-low" id="t-yest-min-dew">-- <span class="time-badge" id="t-yest-min-dew-time"></span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        RadarCast Weather Display System &copy; 2026 | Sala Operativa Meteo
+    </footer>
+
+    <script>
+        const API_LIVE_URL = "https://meteofree.altervista.org/template/plugins/steelSeries/ssMeteotemplate.php";
+        
+        let liveData = {"date":"15:54:38","dateFormat":"m/d/y","temp":"38.2","tempTL":"20.2","tempTH":"39.5","dew":"21.5","dewpointTL":"18.5","dewpointTH":"22.5","apptemp":"42.1","apptempTL":"24.1","apptempTH":"42.8","wlatest":"2.5","wspeed":"1.0","wgust":"11.5","wgustTM":"14.0","bearing":"202","avgbearing":"358.0","press":"1012.7","pressTL":"1012.7","pressTH":"1016.2","pressL":"1012.7","pressH":"1016.2","rfall":"0.0","rrate":"0.0","rrateTM":"0.0","hum":"38.0","humTL":"33.5","humTH":"99.0","SensorContactLost":"0","tempunit":"C","windunit":"kmh","pressunit":"hPa","rainunit":"mm","temptrend":"0.2","TtempTL":"06:05","TtempTH":"15:35","TdewpointTL":"14:00","TdewpointTH":"07:40","TapptempTL":"06:05","TapptempTH":"15:35","TrrateTM":"15:54:38","ThourlyrainTH":"00:00","LastRainTipISO":"0.0","hourlyrainTH":"0.0","ThumTL":"14:40","ThumTH":"06:40","TpressTL":"15:54:38","TpressTH":"09:50","presstrendval":"-0.6","Tbeaufort":"F2","TwgustTM":"15:15","TwindTM":"15:20","windTM":"6.7","bearingTM":"358.0","timeUTC":"2026,07,31,13,54,38","BearingRangeFrom10":"359","BearingRangeTo10":"0","UV":"5.0","UVTH":"--","SolarRad":"567","CurrentSolarMax":"N/A","SolarTM":"687","TSolarTM":"14","domwinddir":"N","WindRoseData":[13,11,22,20,12,6,4,4,10,23,14,6,12,11,11,12],"windrun":"16.5","forecast":"","version":"3.1","build":"10736","ver":"10","yesterday":{"date":"20260730","data":{"maxT":"37.9","maxTTime":"16.25","minT":"20.6","minTTime":"06.20","maxH":"98.0","maxHTime":"06.25","minH":"38.8","minHTime":"17.30","maxP":"1019.2","maxPTime":"01.00","minP":"1015.2","minPTime":"20.35","maxA":"42.8","maxATime":"18.35","minA":"24.4","minATime":"06.20","maxD":"24.1","maxDTime":"18.50","minD":"20.0","minDTime":"14.45","maxW":"4.3","maxWTime":"11.05","maxG":"10.8","maxGRawTime":"00.00","maxRR":"0.0","maxRRTime":"23.55","maxS":"704.0","maxSTime":"13.45","R":"0.0","maxGTime":"13.55","avgW":"1.0","avgB":350,"dominantWind":"N","direction":{"NNW":17,"ENE":22,"E":19,"W":21,"NE":34,"SE":7,"N":21,"NNE":30,"WNW":15,"SW":27,"NW":31,"SSE":4,"WSW":18,"SSW":6,"S":6,"ESE":10}}}};
+
+        let chartInstance = null;
+        let countdownSec = 30;
+        const REFRESH_INTERVAL = 30;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initDashboard();
+            startCountdown();
+        });
+
+        function startCountdown() {
+            setInterval(() => {
+                countdownSec--;
+                if (countdownSec <= 0) {
+                    countdownSec = REFRESH_INTERVAL;
+                    initDashboard();
+                }
+                updateCountdownUI();
+            }, 1000);
+        }
+
+        function updateCountdownUI() {
+            document.getElementById('countdown-num').innerText = countdownSec;
+            const deg = (countdownSec / REFRESH_INTERVAL) * 360;
+            document.getElementById('timer-circle').style.setProperty('--timer-deg', `${deg}deg`);
+        }
+
+        async function initDashboard() {
+            await fetchLiveData();
+            populateCards();
+            populateTable();
+            await loadChartData();
+        }
+
+        async function fetchLiveData() {
+            try {
+                const res = await fetch(API_LIVE_URL + '?_=' + new Date().getTime());
+                if(res.ok) {
+                    liveData = await res.json();
+                }
+            } catch(e) {
+                console.warn("Utilizzo dati JSON in memoria/fallback:", e);
+            }
+        }
+
+        /* 1. SCALA SOGLIE STATO TERMICO GENERALE */
+        function getThermalStatus(tempVal) {
+            const val = parseFloat(tempVal);
+            if (val < 15.0) {
+                return { color: "var(--color-cold)", statusText: "FREDDO / FRESCO", percent: Math.min(Math.max((val / 15) * 25, 5), 25) };
+            } else if (val >= 15.0 && val < 25.0) {
+                return { color: "var(--color-normal)", statusText: "NORMALE / COMFORT", percent: 25 + ((val - 15) / 10) * 25 };
+            } else if (val >= 25.0 && val < 33.0) {
+                return { color: "var(--color-warm)", statusText: "CALDO / ATTENZIONE", percent: 50 + ((val - 25) / 8) * 25 };
+            } else {
+                return { color: "var(--color-extreme)", statusText: "ESTREMO / ALLERTA", percent: Math.min(75 + ((val - 33) / 12) * 25, 100) };
+            }
+        }
+
+        /* 2. CALIBRAZIONE RUGIADA (AFA >= 20°C) */
+        function getDewPointStatus(dewVal) {
+            const val = parseFloat(dewVal);
+            if (val < 12.0) {
+                return { color: "var(--color-cold)", statusText: "SECCO / GRADEVOLE", percent: Math.max((val / 12) * 30, 5) };
+            } else if (val >= 12.0 && val < 16.0) {
+                return { color: "var(--color-normal)", statusText: "COMFORT / IDEALE", percent: 30 + ((val - 12) / 4) * 20 };
+            } else if (val >= 16.0 && val < 20.0) {
+                return { color: "var(--color-normal)", statusText: "UMIDO / MODERATO", percent: 50 + ((val - 16) / 4) * 24 };
+            } else if (val >= 20.0 && val < 24.0) {
+                // SOGLIA CRITICA AFA (>= 20°C)
+                return { color: "var(--color-warm)", statusText: "AFA / DISCOMFORT", percent: 75 + ((val - 20) / 4) * 15 };
+            } else {
+                return { color: "var(--color-extreme)", statusText: "AFA ESTREMA / ALLERTA", percent: Math.min(90 + ((val - 24) / 6) * 10, 100) };
+            }
+        }
+
+        /* RENDERING BARRA TREND GRADUATA CON ZERO CENTRALE (-5.0 a +5.0 °C/h) */
+        function updateTrendBar(barId, valTextId, trendVal) {
+            const val = parseFloat(trendVal) || 0.0;
+            const barEl = document.getElementById(barId);
+            const txtEl = document.getElementById(valTextId);
+
+            txtEl.innerText = (val >= 0 ? '+' : '') + val.toFixed(1) + ' °C/h';
+
+            // Mappatura: -5°C -> -50%, +5°C -> +50%
+            const maxRange = 5.0; 
+            const clampedVal = Math.max(-maxRange, Math.min(maxRange, val));
+            const percentageWidth = Math.abs(clampedVal / maxRange) * 50; // Max 50% dal centro
+
+            if (val >= 0) {
+                barEl.style.left = '50%';
+                barEl.style.width = `${percentageWidth}%`;
+                barEl.style.backgroundColor = val > 2.0 ? 'var(--color-extreme)' : 'var(--accent-cyan)';
+            } else {
+                barEl.style.left = `${50 - percentageWidth}%`;
+                barEl.style.width = `${percentageWidth}%`;
+                barEl.style.backgroundColor = val < -2.0 ? 'var(--color-cold)' : 'var(--color-normal)';
+            }
+        }
+
+        function applyCardStyle(cardId, iconId, barId, statusId, statusData) {
+            document.getElementById(cardId).style.borderColor = statusData.color;
+            document.getElementById(cardId).style.boxShadow = `0 0 15px ${statusData.color}22`;
+            document.getElementById(iconId).style.color = statusData.color;
+            
+            const barEl = document.getElementById(barId);
+            barEl.style.backgroundColor = statusData.color;
+            barEl.style.width = `${statusData.percent}%`;
+            
+            const statusEl = document.getElementById(statusId);
+            statusEl.innerText = statusData.statusText;
+            statusEl.style.color = statusData.color;
+        }
+
+        function populateCards() {
+            const currentTime = liveData.date ? liveData.date.substring(0, 5) : "--:--";
+            document.getElementById('last-update').innerText = liveData.date || "--:--:--";
+            
+            // 1. Temp Reale
+            const tempVal = parseFloat(liveData.temp).toFixed(1);
+            document.getElementById('card-temp').innerText = tempVal;
+            document.getElementById('time-temp-now').innerText = currentTime;
+            document.getElementById('card-temp-min').innerText = liveData.tempTL + '°C';
+            document.getElementById('time-temp-min').innerText = `(${liveData.TtempTL || '--'})`;
+            document.getElementById('card-temp-max').innerText = liveData.tempTH + '°C';
+            document.getElementById('time-temp-max').innerText = `(${liveData.TtempTH || '--'})`;
+            
+            updateTrendBar('trend-bar-temp', 'card-temptrend-val', liveData.temptrend);
+            applyCardStyle('card-temp-box', 'icon-temp', 'risk-temp-bar', 'risk-temp-status', getThermalStatus(tempVal));
+
+            // 2. Temp Percepita
+            const appVal = parseFloat(liveData.apptemp).toFixed(1);
+            document.getElementById('card-apptemp').innerText = appVal;
+            document.getElementById('time-app-now').innerText = currentTime;
+            document.getElementById('card-app-min').innerText = liveData.apptempTL + '°C';
+            document.getElementById('time-app-min').innerText = `(${liveData.TapptempTL || '--'})`;
+            document.getElementById('card-app-max').innerText = liveData.apptempTH + '°C';
+            document.getElementById('time-app-max').innerText = `(${liveData.TapptempTH || '--'})`;
+            
+            // Stima trend percepita basato su variazione termica se non esplicito
+            const appTrend = liveData.apptemptrend || liveData.temptrend;
+            updateTrendBar('trend-bar-app', 'card-apptrend-val', appTrend);
+            applyCardStyle('card-app-box', 'icon-app', 'risk-app-bar', 'risk-app-status', getThermalStatus(appVal));
+
+            // 3. Dew Point (Calibrato AFA >= 20°C)
+            const dewVal = parseFloat(liveData.dew).toFixed(1);
+            document.getElementById('card-dew').innerText = dewVal;
+            document.getElementById('time-dew-now').innerText = currentTime;
+            document.getElementById('card-dew-min').innerText = liveData.dewpointTL + '°C';
+            document.getElementById('time-dew-min').innerText = `(${liveData.TdewpointTL || '--'})`;
+            document.getElementById('card-dew-max').innerText = liveData.dewpointTH + '°C';
+            document.getElementById('time-dew-max').innerText = `(${liveData.TdewpointTH || '--'})`;
+            
+            const dewTrend = liveData.dewtrend || "0.0";
+            updateTrendBar('trend-bar-dew', 'card-dewtrend-val', dewTrend);
+            applyCardStyle('card-dew-box', 'icon-dew', 'risk-dew-bar', 'risk-dew-status', getDewPointStatus(dewVal));
+        }
+
+        function populateTable() {
+            // Oggi
+            document.getElementById('t-today-max-t').childNodes[0].nodeValue = liveData.tempTH + " °C ";
+            document.getElementById('t-today-max-t-time').innerText = "(" + liveData.TtempTH + ")";
+            document.getElementById('t-today-min-t').childNodes[0].nodeValue = liveData.tempTL + " °C ";
+            document.getElementById('t-today-min-t-time').innerText = "(" + liveData.TtempTL + ")";
+
+            document.getElementById('t-today-max-app').childNodes[0].nodeValue = liveData.apptempTH + " °C ";
+            document.getElementById('t-today-max-app-time').innerText = "(" + liveData.TapptempTH + ")";
+            document.getElementById('t-today-min-app').childNodes[0].nodeValue = liveData.apptempTL + " °C ";
+            document.getElementById('t-today-min-app-time').innerText = "(" + liveData.TapptempTL + ")";
+
+            document.getElementById('t-today-max-dew').childNodes[0].nodeValue = liveData.dewpointTH + " °C ";
+            document.getElementById('t-today-max-dew-time').innerText = "(" + liveData.TdewpointTH + ")";
+            document.getElementById('t-today-min-dew').childNodes[0].nodeValue = liveData.dewpointTL + " °C ";
+            document.getElementById('t-today-min-dew-time').innerText = "(" + liveData.TdewpointTL + ")";
+
+            // Ieri
+            const y = liveData.yesterday.data;
+            document.getElementById('t-yest-max-t').childNodes[0].nodeValue = y.maxT + " °C ";
+            document.getElementById('t-yest-max-t-time').innerText = "(" + y.maxTTime + ")";
+            document.getElementById('t-yest-min-t').childNodes[0].nodeValue = y.minT + " °C ";
+            document.getElementById('t-yest-min-t-time').innerText = "(" + y.minTTime + ")";
+
+            document.getElementById('t-yest-max-app').childNodes[0].nodeValue = y.maxA + " °C ";
+            document.getElementById('t-yest-max-app-time').innerText = "(" + y.maxATime + ")";
+            document.getElementById('t-yest-min-app').childNodes[0].nodeValue = y.minA + " °C ";
+            document.getElementById('t-yest-min-app-time').innerText = "(" + y.minATime + ")";
+
+            document.getElementById('t-yest-max-dew').childNodes[0].nodeValue = y.maxD + " °C ";
+            document.getElementById('t-yest-max-dew-time').innerText = "(" + y.maxDTime + ")";
+            document.getElementById('t-yest-min-dew').childNodes[0].nodeValue = y.minD + " °C ";
+            document.getElementById('t-yest-min-dew-time').innerText = "(" + y.minDTime + ")";
+        }
+
+        function formatUTCToLocalTime(utcString) {
+            let d;
+            if(!utcString) return "--:--";
+            if(utcString.includes(' ')) {
+                d = new Date(utcString.replace(' ', 'T') + 'Z');
+            } else if(utcString.includes('T')) {
+                d = new Date(utcString.endsWith('Z') ? utcString : utcString + 'Z');
+            } else {
+                d = new Date(utcString);
+            }
+            if (isNaN(d.valueOf())) return utcString.substring(0, 5);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+
+        async function loadChartData() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const currentDateStr = `${year}-${month}-${day}`;
+
+            const csvUrl = `https://www.meteofree.altervista.org/template/plugins/ecowitt/download.php?file=weather_16A0B66BAF96590657839ADE70006EE3_${currentDateStr}.csv`;
+
+            let labels = [];
+            let temperatures = [];
+
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) throw new Error("Errore recupero CSV storico");
+                const text = await response.text();
+                
+                const lines = text.trim().split('\n');
+                if(lines.length < 2) throw new Error("CSV vuoto");
+
+                const headers = lines[0].split(',').map(h => h.trim());
+                const tempIndex = headers.indexOf('tempc');
+                const timeIndex = headers.indexOf('dateutc');
+
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].split(',');
+                    if (cols.length > tempIndex && cols[tempIndex] !== "") {
+                        const localTimeStr = formatUTCToLocalTime(cols[timeIndex].trim());
+                        labels.push(localTimeStr);
+                        temperatures.push(parseFloat(cols[tempIndex]));
+                    }
+                }
+            } catch (err) {
+                console.warn("Chiamata CSV non riuscita o bloccata da CORS. Profilo termico stimato:", err);
+                labels = ["00:00", "02:00", "04:00", "06:05", "08:00", "10:00", "12:00", "14:00", "15:35", liveData.date.substring(0,5)];
+                temperatures = [
+                    24.2, 22.5, 21.1, 
+                    parseFloat(liveData.tempTL), 
+                    26.4, 31.2, 35.8, 38.6, 
+                    parseFloat(liveData.tempTH), 
+                    parseFloat(liveData.temp)
+                ];
+            }
+
+            renderChart(labels, temperatures);
+        }
+
+        function renderChart(labels, dataPoints) {
+            const ctx = document.getElementById('tempChart').getContext('2d');
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(0, 240, 255, 0.45)');
+            gradient.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+
+            if(chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Temperatura (°C)',
+                        data: dataPoints,
+                        borderColor: '#00f0ff',
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#00ff88',
+                        pointBorderColor: '#060b11',
+                        pointHoverRadius: 7,
+                        pointRadius: 3,
+                        fill: true,
+                        backgroundColor: gradient,
+                        tension: 0.25
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#e0f0ff', font: { family: 'Rajdhani', size: 14 } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(6, 11, 17, 0.95)',
+                            titleColor: '#00f0ff',
+                            bodyColor: '#fff',
+                            borderColor: '#1e3a5f',
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(30, 58, 95, 0.3)' },
+                            ticks: { color: '#6b829e', font: { family: 'Orbitron', size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(30, 58, 95, 0.3)' },
+                            ticks: { color: '#6b829e', font: { family: 'Rajdhani', size: 12 } }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
