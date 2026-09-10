@@ -119,7 +119,7 @@ const getAlertDescription = (statusClass, riskDescription) => {
             description: `${desc}. Condizioni variabili. Si consiglia cautela.` 
         };
         default: return { 
-            title: 'NESSUNA RISCHIO', 
+            title: 'NESSUN RISCHIO', 
             description: `${desc}. Buona giornata!` 
         };
     }
